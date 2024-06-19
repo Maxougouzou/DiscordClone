@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, Image, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
 import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import useSession from '../hooks/useSession';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -58,6 +59,7 @@ export default function Messages() {
       })
       .catch((error) => {
         console.error("Erreur de connexion : ", error);
+        Alert.alert("Erreur de connexion", error.message);
       });
   };
 
@@ -68,6 +70,7 @@ export default function Messages() {
       })
       .catch((error) => {
         console.error("Erreur lors de la création du compte : ", error);
+        Alert.alert("Erreur lors de la création du compte", error.message);
       });
   };
 
@@ -78,17 +81,23 @@ export default function Messages() {
       })
       .catch((error) => {
         console.error("Erreur de déconnexion : ", error);
+        Alert.alert("Erreur de déconnexion", error.message);
       });
   };
 
   const createConversation = async () => {
     if (newConversationEmail) {
-      const newConversationRef = await addDoc(collection(db, "conversations"), {
-        participants: [user.email, newConversationEmail],
-        createdAt: new Date(),
-      });
-      setNewConversationEmail('');
-      setSelectedConversationId(newConversationRef.id);
+      try {
+        const newConversationRef = await addDoc(collection(db, "conversations"), {
+          participants: [user.email, newConversationEmail],
+          createdAt: new Date(),
+        });
+        setNewConversationEmail('');
+        setSelectedConversationId(newConversationRef.id);
+      } catch (error) {
+        console.error("Erreur lors de la création de la conversation : ", error);
+        Alert.alert("Erreur lors de la création de la conversation", error.message);
+      }
     }
   };
 
@@ -104,16 +113,21 @@ export default function Messages() {
         messageData.image = currentImage;
       }
 
-      await addDoc(collection(db, "conversations", selectedConversationId, "messages"), messageData);
-      setCurrentMessage('');
-      setCurrentImage(null);
+      try {
+        await addDoc(collection(db, "conversations", selectedConversationId, "messages"), messageData);
+        setCurrentMessage('');
+        setCurrentImage(null);
+      } catch (error) {
+        console.error("Erreur lors de l'envoi du message : ", error);
+        Alert.alert("Erreur lors de l'envoi du message", error.message);
+      }
     }
   };
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
-      alert("Vous devez autoriser l'accès à la galerie pour ajouter des photos.");
+      Alert.alert("Permission requise", "Vous devez autoriser l'accès à la galerie pour ajouter des photos.");
       return;
     }
 
@@ -128,9 +142,10 @@ export default function Messages() {
       return;
     }
 
-    if (!pickerResult.canceled && pickerResult.uri) {
-      console.log("Image URI:", pickerResult.uri);
-      setCurrentImage(pickerResult.uri);
+    if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+      const selectedImage = pickerResult.assets[0].uri;
+      console.log("Image URI:", selectedImage);
+      setCurrentImage(selectedImage);
     } else {
       console.log("No image picked.");
     }
@@ -145,20 +160,24 @@ export default function Messages() {
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>Bienvenue, {user.email}!</Text>
-        <TextInput
-          style={styles.input}
-          value={newConversationEmail}
-          onChangeText={setNewConversationEmail}
-          placeholder="Start a conversation with email"
-        />
-        <Button title="Start Conversation" onPress={createConversation} />
+        <View style={styles.header}>
+          <TextInput
+            style={styles.input}
+            value={newConversationEmail}
+            onChangeText={setNewConversationEmail}
+            placeholder="Start a conversation with email"
+          />
+          <TouchableOpacity style={styles.iconButton} onPress={createConversation}>
+            <AntDesign name="pluscircleo" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
         <FlatList
           data={conversations}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <Text onPress={() => setSelectedConversationId(item.id)}>
-              Conversation with {item.participants.filter(p => p !== user.email)}
-            </Text>
+            <TouchableOpacity style={styles.conversationItem} onPress={() => setSelectedConversationId(item.id)}>
+              <Text>Conversation with {item.participants.filter(p => p !== user.email)}</Text>
+            </TouchableOpacity>
           )}
         />
         <FlatList
@@ -177,15 +196,21 @@ export default function Messages() {
             </TouchableOpacity>
           )}
         />
-        <TextInput
-          style={styles.input}
-          value={currentMessage}
-          onChangeText={setCurrentMessage}
-          placeholder="Type a message"
-        />
+        <View style={styles.footer}>
+          <TextInput
+            style={styles.messageInput}
+            value={currentMessage}
+            onChangeText={setCurrentMessage}
+            placeholder="Type a message"
+          />
+          <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
+            <Ionicons name="image-outline" size={24} color="black" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
+            <Ionicons name="send-outline" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
         {currentImage && <Image source={{ uri: currentImage }} style={styles.imagePreview} />}
-        <Button title="Pick Image" onPress={pickImage} />
-        <Button title="Send Message" onPress={sendMessage} />
         <Button
           title="Se déconnecter"
           onPress={handleSignOut}
@@ -240,9 +265,8 @@ export default function Messages() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
+    backgroundColor: '#fff',
   },
   input: {
     width: '100%',
@@ -250,14 +274,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'gray',
     padding: 10,
+    borderRadius: 5,
   },
   welcome: {
     fontSize: 18,
     fontWeight: 'bold',
     margin: 10,
+    textAlign: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  iconButton: {
+    marginLeft: 10,
+  },
+  conversationItem: {
+    padding: 10,
+    backgroundColor: '#f7f7f7',
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginVertical: 4,
   },
   messageBubble: {
-    padding: 8,
+    padding: 10,
     borderRadius: 15,
     marginVertical: 2,
     maxWidth: '70%',
@@ -278,13 +320,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontSize: 12,
   },
-  conversationItem: {
-    padding: 10,
-    backgroundColor: '#f7f7f7',
-    borderColor: '#ddd',
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  messageInput: {
+    flex: 1,
     borderWidth: 1,
-    borderRadius: 5,
-    marginVertical: 4,
+    borderColor: 'gray',
+    padding: 10,
+    borderRadius: 25,
   },
   fullScreenImageContainer: {
     flex: 1,
@@ -301,10 +347,11 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     marginTop: 5,
+    borderRadius: 10,
   },
   imagePreview: {
     width: 100,
     height: 100,
     marginVertical: 10,
-  }
+  },
 });
