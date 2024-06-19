@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import s from '../config/styles';
+import colors from '../config/colors';
 
 const auth = getAuth();
 
@@ -23,44 +24,102 @@ export default function SignUp() {
       });
   };
 
+  const navigateToSignIn = () => {
+    router.push('/sign-in');
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={[s.largeTitle, { textAlign: 'center', marginBottom: 20 }]}>S'inscrire</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry={true}
-      />
-      <Button
-        title="S'inscrire"
-        onPress={handleSignUp}
-      />
-    </View>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <View style={styles.inner}>
+        <Text style={styles.title}>S'inscrire</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#888"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Mot de passe"
+          placeholderTextColor="#888"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={true}
+        />
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>S'inscrire</Text>
+        </TouchableOpacity>
+        <View style={styles.signInTextContainer}>
+          <Text style={styles.signInText}>Vous avez déjà un compte ? </Text>
+          <TouchableOpacity onPress={navigateToSignIn}>
+            <Text style={styles.signInLink}>Se connecter</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-    marginTop: 50,
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+  },
+  inner: {
+    padding: 24,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    position: 'absolute',
+    top: 60,
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    width: '100%',
   },
   input: {
     width: '100%',
-    marginBottom: 12,
+    height: 50,
+    backgroundColor: '#444',
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    borderRadius: 25,
     borderWidth: 1,
-    borderColor: 'gray',
-    padding: 10,
-    borderRadius: 5,
+    borderColor: '#555',
+    color: '#fff',
+  },
+  button: {
+    width: '100%',
+    height: 50,
+    backgroundColor: colors.turquoise,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+  },
+  signInTextContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  signInText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  signInLink: {
+    color: colors.blurple,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
