@@ -1,16 +1,16 @@
 import React from 'react';
-import { View, StyleSheet, Text, Image } from 'react-native';
+import { View, StyleSheet, Text, Image} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Importation des icônes Ionicons
-import s from '../config/styles';
-import colors from '../config/colors';
-import Card from '../components/Card';
+import s from '../../config/styles';
+import colors from '../../config/colors';
+import Card from '../../components/Card';
 
 export default function Profile() {
   return (
     <View style={styles.container}>
       <View style={[styles.view1, s.bgBlue]}></View>
       <View style={[styles.view2, s.bgPrimary, s.padding]}>
-        <Image source={require('../assets/images/icon.png')} style={styles.image} />
+        <Image source={require('../../assets/images/icon.png')} style={styles.image} />
         <View style={{ flex: 1 }}>
           <Card>
             <Text style={[s.textWhite, s.largeTitle, s.bold]}>BenoitDeLaCompta</Text>

@@ -41,6 +41,9 @@ const styles = StyleSheet.create({
   bgRed: {
     backgroundColor: colors.red,
   },
+  bgDark: {
+    backgroundColor: colors.dark,
+  },
   borderRadius: {
     borderRadius: 8,
   },
@@ -59,6 +62,7 @@ const styles = StyleSheet.create({
   mediumTitle: {
     fontSize: 24,
     lineHeight: 28,
+    fontWeight: 'bold',
   },
   bodyText: {
     fontSize: 16,
@@ -68,7 +72,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.third,
     padding: 10,
     borderRadius: 9999,
-    width: '100%',
     alignItems: 'center',
     borderWidth: 0.2,
     borderColor: 'rgba(255, 255, 255, 0.20)',
@@ -77,6 +80,9 @@ const styles = StyleSheet.create({
     color: "#8E909C",
     fontWeight: 'bold',
   },
+  paddingG: {
+    paddingHorizontal: 15,
+  }
 });
 
 export default styles;

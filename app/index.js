@@ -1,22 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Redirect } from "expo-router";
 
-export default function Messages() {
+export default function StartPage(){
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Messages Page</Text>
-    </View>
-  );
+    <Redirect href="/messages" />
+    )
+  ;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-});
