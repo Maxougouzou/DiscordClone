@@ -1,11 +1,29 @@
 import React from 'react';
-import { View, StyleSheet, Text, Image} from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Importation des icônes Ionicons
+import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
+import { signOut, getAuth } from "firebase/auth";
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import s from '../../config/styles';
 import colors from '../../config/colors';
 import Card from '../../components/Card';
+import useSession from '../../hooks/useSession';
+import { useRouter } from 'expo-router';
 
 export default function Profile() {
+  const user = useSession();
+  const auth = getAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      console.log("Déconnexion réussie");
+      router.replace('/sign-in');  // Redirection après la déconnexion
+    } catch (error) {
+      console.error("Erreur de déconnexion : ", error);
+      // Alert.alert("Erreur de déconnexion", error.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={[styles.view1, s.bgBlue]}></View>
@@ -14,7 +32,7 @@ export default function Profile() {
         <View style={{ flex: 1 }}>
           <Card>
             <Text style={[s.textWhite, s.largeTitle, s.bold]}>BenoitDeLaCompta</Text>
-            <Text style={[s.textWhite, s.bodyText]}>benoitdelacompta</Text>
+            {user && <Text style={[s.textWhite, s.bodyText]}>{user.email}</Text>}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
               <View style={[s.buttonGray, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
                 <Ionicons name="chatbubble-outline" size={16} color="#FFF" style={{ marginRight: 5 }} />
@@ -28,11 +46,14 @@ export default function Profile() {
           </Card>
           <Card>
             <Text style={s.textGray}>Membre discord depuis :</Text>
-            <Text style={[s.textWhite, {marginTop:5}]}>9 mai 2017</Text>
+            <Text style={[s.textWhite, { marginTop: 5 }]}>9 mai 2017</Text>
           </Card>
           <Card>
             <Text style={s.textGray}>Mes amis :</Text>
           </Card>
+          <TouchableOpacity style={styles.button} onPress={handleSignOut}>
+            <Text style={styles.buttonText}>Déconnexion</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -56,5 +77,16 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     borderWidth: 4,
     borderColor: colors.primary,
+  },
+  button: {
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
