@@ -355,3 +355,12 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 });
+//import { Redirect } from "expo-router";
+
+//export default function StartPage(){
+//  return (
+//    <Redirect href="/messages" />
+//    )
+//  ;
+//}
+
