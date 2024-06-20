@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { db } from './firebaseConfig';
 import s from '../config/styles';
 import colors from '../config/colors';
 
@@ -10,18 +12,44 @@ const auth = getAuth();
 export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pseudo, setPseudo] = useState('');
   const router = useRouter();
 
-  const handleSignUp = () => {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        console.log('Compte créé avec succès : ', userCredential.user);
-        router.replace('/messages');
-      })
-      .catch((error) => {
-        console.error('Erreur lors de la création du compte : ', error);
-        Alert.alert('Erreur lors de la création du compte', error.message);
+  const handleSignUp = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    try {
+      // Vérifier l'unicité du pseudo
+      const q = query(collection(db, 'users'), where('pseudo', '==', pseudo));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        Alert.alert('Erreur', 'Ce pseudo est déjà utilisé.');
+        return;
+      }
+
+      // Créer un nouvel utilisateur avec Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const currentDate = new Date();
+
+      // Ajouter des informations supplémentaires dans Firestore
+      await addDoc(collection(db, 'users'), {
+        uid: user.uid,
+        email: user.email,
+        pseudo: pseudo,
+        createdAt: currentDate,
       });
+
+      console.log('Compte créé avec succès : ', user);
+      router.replace('/messages');
+    } catch (error) {
+      console.error('Erreur lors de la création du compte : ', error);
+      Alert.alert('Erreur lors de la création du compte', error.message);
+    }
   };
 
   const navigateToSignIn = () => {
@@ -32,6 +60,14 @@ export default function SignUp() {
     <KeyboardAvoidingView style={styles.container} behavior="padding">
       <View style={styles.inner}>
         <Text style={styles.title}>S'inscrire</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Pseudo"
+          placeholderTextColor="#888"
+          value={pseudo}
+          onChangeText={setPseudo}
+          autoCapitalize="none"
+        />
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -47,6 +83,14 @@ export default function SignUp() {
           placeholderTextColor="#888"
           value={password}
           onChangeText={setPassword}
+          secureTextEntry={true}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmer le mot de passe"
+          placeholderTextColor="#888"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
           secureTextEntry={true}
         />
         <TouchableOpacity style={styles.button} onPress={handleSignUp}>
