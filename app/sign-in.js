@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import s from '../config/styles';
-import { auth } from './firebaseConfig';
+import { getDocs, query, where, collection } from 'firebase/firestore';
+import { auth, db } from './firebaseConfig';
 import colors from '../config/colors';
 
 export default function SignIn() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,16 +22,54 @@ export default function SignIn() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    setLoading(true);
+    let email = identifier;
+
+    // Vérifier si l'identifiant est un pseudo
+    if (!identifier.includes('@')) {
+      try {
+        // Rechercher l'email correspondant au pseudo
+        const q = query(collection(db, 'users'), where('pseudo', '==', identifier));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          email = querySnapshot.docs[0].data().email;
+        } else {
+          setLoading(false);
+          Alert.alert('Erreur de connexion', 'Pseudo non trouvé.');
+          return;
+        }
+      } catch (error) {
+        setLoading(false);
+        Alert.alert('Erreur de connexion', 'Erreur lors de la vérification du pseudo.');
+        console.error('Erreur lors de la vérification du pseudo : ', error);
+        return;
+      }
+    }
+
+    // Vérifier si l'email est valide avant de se connecter
+    if (!validateEmail(email)) {
+      setLoading(false);
+      Alert.alert('Erreur de connexion', 'Email invalide.');
+      return;
+    }
+
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
+        setLoading(false);
         console.log('Utilisateur connecté : ', userCredential.user);
         router.replace('/messages');
       })
       .catch((error) => {
+        setLoading(false);
         console.error('Erreur de connexion : ', error);
         Alert.alert('Erreur de connexion', error.message);
       });
+  };
+
+  const validateEmail = (email) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
   };
 
   const navigateToSignUp = () => {
@@ -43,12 +82,11 @@ export default function SignIn() {
         <Text style={styles.title}>Se connecter</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder="Email ou Pseudo"
           placeholderTextColor="#888"
-          value={email}
-          onChangeText={setEmail}
+          value={identifier}
+          onChangeText={setIdentifier}
           autoCapitalize="none"
-          keyboardType="email-address"
         />
         <TextInput
           style={styles.input}
@@ -58,8 +96,12 @@ export default function SignIn() {
           onChangeText={setPassword}
           secureTextEntry={true}
         />
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Connexion</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Connexion</Text>
+          )}
         </TouchableOpacity>
         <View style={styles.signUpTextContainer}>
           <Text style={styles.signUpText}>Vous n'avez pas de compte ? </Text>
