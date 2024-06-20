@@ -43,7 +43,7 @@ export default function SignIn() {
         <Text style={styles.title}>Se connecter</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder="Email ou pseudo "
           placeholderTextColor="#888"
           value={email}
           onChangeText={setEmail}
