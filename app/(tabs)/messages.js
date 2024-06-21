@@ -9,7 +9,6 @@ import s from '../../config/styles';
 import colors from '../../config/colors';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { calculateTimeSinceLastMessage } from '../../assets/js/utils';
 
 export default function Messages() {
   const [newConversationIdentifier, setNewConversationIdentifier] = useState('');
@@ -19,7 +18,6 @@ export default function Messages() {
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentMessage, setCurrentMessage] = useState('');
   const [currentImage, setCurrentImage] = useState(null);
   const router = useRouter();
   const user = useSession();
@@ -95,7 +93,7 @@ export default function Messages() {
           lastMessageTimestamp: new Date()
         });
         setNewConversationIdentifier('');
-        setModalVisible(false); // Masquer le modal après la création de la conversation
+        setModalVisible(false); 
       } catch (error) {
         console.error("Erreur lors de la création de la conversation : ", error);
         Alert.alert("Erreur lors de la création de la conversation", error.message);
@@ -140,12 +138,6 @@ export default function Messages() {
     }
   };
 
-  const formatTimestamp = (timestamp) => {
-    const messageDate = timestamp.toDate();
-    const hours = messageDate.getHours().toString().padStart(2, '0');
-    const minutes = messageDate.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -221,53 +213,10 @@ export default function Messages() {
             deleteConversation={deleteConversation} 
           />
         </View>
-        {selectedConversationId && messages.length > 0 && ( // Ajout de la condition pour vérifier si des messages existent
-          <>
-            <FlatList
-              style={[styles.messagesList, s.paddingG]}
-              data={messages}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <View>
-                  <View style={styles.avatarContainer}>
-                    <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.avatar} />
-                  </View>
-                  <View style={styles.messageContent}>
-                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                      <Text style={[s.textWhite, styles.username]}>{item.senderId}</Text>
-                      <Text style={[styles.timestamp]}>{calculateTimeSinceLastMessage(new Date(item.timestamp))}</Text>
-                    </View>
-                    {item.image && (
-                      <TouchableOpacity onPress={() => viewFullScreenImage(item.image)}>
-                        <Image source={{ uri: item.image }} style={styles.imageMessage} />
-                      </TouchableOpacity>
-                    )}
-                    <Text style={[s.textWhite, styles.text]}>{item.text}</Text>
-                  </View>
-                </View>
-              )}
-              inverted
-            />
-            <View style={styles.footer}>
-              <TextInput
-                style={styles.messageInput}
-                value={currentMessage}
-                onChangeText={setCurrentMessage}
-                placeholder="Type a message"
-                placeholderTextColor={colors.gray}
-              />
-              <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
-                <Ionicons name="image-outline" size={24} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
-                <Ionicons name="send-outline" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
         <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
           <AntDesign name="plus" size={24} color="#ffffff" />
         </TouchableOpacity>
+
         <Modal
           animationType="slide"
           transparent={true}
@@ -295,6 +244,7 @@ export default function Messages() {
             </View>
           </View>
         </Modal>
+
       </View>
     </KeyboardAvoidingView>
   );
