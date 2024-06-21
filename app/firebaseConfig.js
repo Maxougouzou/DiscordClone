@@ -3,7 +3,6 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from 'firebase/storage';
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyBX32Ts--fEjvUA_VnbwSetDmsQiSRdTSk",
   authDomain: "discordclone-bb1dc.firebaseapp.com",
