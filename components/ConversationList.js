@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FlatList, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import MessageCard from '../components/Messages/MessageCard';
-import { db } from '../app/firebaseConfig'; // Assurez-vous que ce chemin est correct
+import { db } from '../app/firebaseConfig';
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 
-export default function ConversationsList({ conversations, user, setSelectedConversationId }) {
+export default function ConversationsList({ conversations, user, setSelectedConversationId, deleteConversation }) {
   const [lastMessages, setLastMessages] = useState({});
   const router = useRouter();
 
@@ -47,6 +47,7 @@ export default function ConversationsList({ conversations, user, setSelectedConv
               avatar: require('../assets/images/avatars/avatar1.png'),
             }}
             onPress={() => handlePress(item.id)}
+            onDelete={() => deleteConversation(item.id)}
           />
         );
       }}
