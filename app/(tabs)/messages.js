@@ -200,6 +200,16 @@ export default function Messages() {
             <Ionicons name="people" size={20} color="#ffffff" />
             <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Demande(s) d'ami</Text>
           </TouchableOpacity>
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableOpacity style={[styles.button , {marginRight:5}]} onPress={navigateAddFriends}>
+                <AntDesign name="adduser" size={20} color="#ffffff" />
+                <Text style={[s.textWhite, s.bold]}></Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={navigateFriendsList}>
+                <Ionicons name="people" size={20} color="#ffffff" />
+                <Text style={[s.textWhite, s.bold]}></Text>
+              </TouchableOpacity>
+            </View>
         </View>
         <View style={styles.view2}>
           <View style={[styles.inputContainer, s.bgDark]}>
@@ -319,7 +329,7 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     borderRadius: 20,
-    backgroundColor: '#23272A',
+    backgroundColor: colors.blurple,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 8,
