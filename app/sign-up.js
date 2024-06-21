@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from './firebaseConfig';
-import s from '../config/styles';
 import colors from '../config/colors';
 
 const auth = getAuth();

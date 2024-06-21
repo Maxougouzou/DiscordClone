@@ -30,7 +30,6 @@ export default function ConversationsList({ conversations, user, setSelectedConv
   );
 }
 
-
 const styles = StyleSheet.create({
   conversationItem: {
     padding: 10,

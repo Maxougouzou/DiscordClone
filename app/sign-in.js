@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from 'react';
-// <<<<<<< mathis
-// import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
-// import { useRouter } from 'expo-router';
-// import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-// import { getDocs, query, where, collection } from 'firebase/firestore';
-// import { auth, db } from './firebaseConfig';
-// import colors from '../config/colors';
-// =======
-// import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-// import {  signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-// import s from '../config/styles';
-// import { useRouter } from 'expo-router';
-// import { auth } from './firebaseConfig';
-// >>>>>>> master
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { getDocs, query, where, collection } from 'firebase/firestore';
+import { auth, db } from './firebaseConfig';
+import colors from '../config/colors';
+
 
 export default function SignIn() {
   const [identifier, setIdentifier] = useState('');
@@ -34,10 +27,8 @@ export default function SignIn() {
     setLoading(true);
     let email = identifier;
 
-    // Vérifier si l'identifiant est un pseudo
     if (!identifier.includes('@')) {
       try {
-        // Rechercher l'email correspondant au pseudo
         const q = query(collection(db, 'users'), where('pseudo', '==', identifier));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
@@ -55,7 +46,6 @@ export default function SignIn() {
       }
     }
 
-    // Vérifier si l'email est valide avant de se connecter
     if (!validateEmail(email)) {
       setLoading(false);
       Alert.alert('Erreur de connexion', 'Email invalide.');
