@@ -1,10 +1,30 @@
-import React from 'react';
-import { FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { FlatList, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import MessageCard from '../components/Messages/MessageCard';
+import { db } from '../app/firebaseConfig'; // Ensure this path is correct
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 
-export default function ConversationsList({ conversations, user, setSelectedConversationId, deleteConversation }) {
+export default function ConversationsList({ conversations, user, setSelectedConversationId }) {
+  const [lastMessages, setLastMessages] = useState({});
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchLastMessages = async () => {
+      const messages = {};
+      for (const conversation of conversations) {
+        const messagesRef = collection(db, "conversations", conversation.id, "messages");
+        const q = query(messagesRef, orderBy("timestamp", "desc"), limit(1));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          messages[conversation.id] = querySnapshot.docs[0].data();
+        }
+      }
+      setLastMessages(messages);
+    };
+    
+    fetchLastMessages();
+  }, [conversations]);
 
   const handlePress = (id) => {
     setSelectedConversationId(id);
@@ -15,18 +35,39 @@ export default function ConversationsList({ conversations, user, setSelectedConv
     <FlatList
       data={conversations}
       keyExtractor={item => item.id}
-      renderItem={({ item }) => (
-        <MessageCard 
-          message={{
-            senderId: item.participants.find(p => user != null && p !== user.email),
-            text: 'Tap to view conversation',
-            timestamp: item.createdAt,
-            avatar: require('../assets/images/avatars/avatar1.png'),
-          }}
-          onPress={() => handlePress(item.id)}
-          onDelete={() => deleteConversation(item.id)}
-        />
-      )}
+      renderItem={({ item }) => {
+        const lastMessage = lastMessages[item.id];
+        return (
+          <MessageCard 
+            message={{
+              senderId: item.participants.find(p => user != null && p !== user.email),
+              text: lastMessage ? lastMessage.text : 'No messages yet',
+              timestamp: lastMessage ? lastMessage.timestamp : item.createdAt,
+              avatar: require('../assets/images/avatars/avatar1.png'),
+            }}
+            onPress={() => handlePress(item.id)}
+          />
+        );
+      }}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  conversationItem: {
+    padding: 10,
+    backgroundColor: '#f7f7f7',
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+});

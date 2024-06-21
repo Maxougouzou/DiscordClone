@@ -10,7 +10,6 @@ const useSession = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        // L'utilisateur est connecté
         const q = query(collection(db, "users"), where("uid", "==", currentUser.uid));
         getDocs(q)
           .then((docs) => {
@@ -21,12 +20,11 @@ const useSession = () => {
             })
           });
       } else {
-        // L'utilisateur n'est pas connecté
         setUser(null);
       }
     });
 
-    return () => unsubscribe();  // Nettoyer l'abonnement
+    return () => unsubscribe();  
   }, []);
 
   return user;
