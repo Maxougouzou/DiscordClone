@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { getDocs, query, where, collection } from 'firebase/firestore';
-import { auth, db } from './firebaseConfig';
-import colors from '../config/colors';
+// <<<<<<< mathis
+// import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+// import { useRouter } from 'expo-router';
+// import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+// import { getDocs, query, where, collection } from 'firebase/firestore';
+// import { auth, db } from './firebaseConfig';
+// import colors from '../config/colors';
+// =======
+// import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+// import {  signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+// import s from '../config/styles';
+// import { useRouter } from 'expo-router';
+// import { auth } from './firebaseConfig';
+// >>>>>>> master
 
 export default function SignIn() {
   const [identifier, setIdentifier] = useState('');

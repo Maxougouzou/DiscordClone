@@ -17,10 +17,9 @@ export default function Profile() {
     try {
       await signOut(auth);
       console.log("Déconnexion réussie");
-      router.replace('/sign-in');  // Redirection après la déconnexion
+      router.replace('/sign-in'); 
     } catch (error) {
       console.error("Erreur de déconnexion : ", error);
-      // Alert.alert("Erreur de déconnexion", error.message);
     }
   };
 

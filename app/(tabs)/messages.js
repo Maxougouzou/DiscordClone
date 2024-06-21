@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, FlatList, Modal } from 'react-native';
-import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, arrayUnion, doc, getDocs } from "firebase/firestore";
+// <<<<<<< mathis
+// import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, FlatList, Modal } from 'react-native';
+// import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, arrayUnion, doc, getDocs } from "firebase/firestore";
+// =======
+// import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, Image, FlatList } from 'react-native';
+// import { collection, addDoc, query, where, orderBy, onSnapshot } from "firebase/firestore";
+// >>>>>>> master
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import useSession from '../../hooks/useSession';
 import ConversationsList from '../../components/ConversationList';
 import { db } from '../firebaseConfig'; 
 import s from '../../config/styles';
 import colors from '../../config/colors';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { calculateTimeSinceLastMessage } from '../../assets/js/utils';
 
 export default function Messages() {
   const [newConversationIdentifier, setNewConversationIdentifier] = useState('');
@@ -14,8 +22,15 @@ export default function Messages() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
-  const [newMessage, setNewMessage] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
+// <<<<<<< mathis
+//   const [newMessage, setNewMessage] = useState('');
+//   const [modalVisible, setModalVisible] = useState(false);
+// =======
+//   const [currentMessage, setCurrentMessage] = useState('');
+//   const [currentImage, setCurrentImage] = useState(null);
+//   const router = useRouter();
+
+// >>>>>>> master
 
   const user = useSession();
 
@@ -45,11 +60,20 @@ export default function Messages() {
         querySnapshot.forEach((doc) => {
           loadedMessages.push({ id: doc.id, ...doc.data() });
         });
-        setMessages(loadedMessages);
+        setMessages(loadedMessages.reverse());
       });
       return unsubscribe;
     }
   }, [selectedConversationId]);
+
+  const navigateAddFriends = () => {
+    router.push('/addFriends');
+  };
+
+  const navigateFriendsList = () => {
+    router.push('/friendsRequest');
+  };
+
 
   const createConversation = async () => {
     if (newConversationIdentifier) {
@@ -84,15 +108,30 @@ export default function Messages() {
     }
   };
 
-  const sendMessage = async () => {
-    if (newMessage.trim() !== '') {
-      try {
-        await addDoc(collection(db, "conversations", selectedConversationId, "messages"), {
-          text: newMessage,
-          senderId: user.email,
-          timestamp: serverTimestamp(),
-        });
-        setNewMessage('');
+//   const sendMessage = async () => {
+// <<<<<<< mathis
+//     if (newMessage.trim() !== '') {
+//       try {
+//         await addDoc(collection(db, "conversations", selectedConversationId, "messages"), {
+//           text: newMessage,
+//           senderId: user.email,
+//           timestamp: serverTimestamp(),
+//         });
+//         setNewMessage('');
+// =======
+//     if ((currentMessage || currentImage) && selectedConversationId) {
+//       const messageData = {
+//         text: currentMessage,
+//         senderId: user.email,
+//         timestamp: new Date(),
+//         image: currentImage || null,
+//       };
+
+//       try {
+//         await addDoc(collection(db, "conversations", selectedConversationId, "messages"), messageData);
+//         setCurrentMessage('');
+//         setCurrentImage(null);
+// >>>>>>> master
       } catch (error) {
         console.error("Erreur lors de l'envoi du message : ", error);
         Alert.alert("Erreur lors de l'envoi du message", error.message);
@@ -100,50 +139,89 @@ export default function Messages() {
     }
   };
 
-  const deleteConversation = async (conversationId) => {
-    try {
-      const conversationRef = doc(db, "conversations", conversationId);
-      await updateDoc(conversationRef, {
-        deletedBy: arrayUnion(user.email)
-      });
-      setSelectedConversationId(null);
-    } catch (error) {
-      console.error("Erreur lors de la suppression de la conversation : ", error);
-      Alert.alert("Erreur lors de la suppression de la conversation", error.message);
-    }
-  };
+// <<<<<<< mathis
+//   const deleteConversation = async (conversationId) => {
+//     try {
+//       const conversationRef = doc(db, "conversations", conversationId);
+//       await updateDoc(conversationRef, {
+//         deletedBy: arrayUnion(user.email)
+//       });
+//       setSelectedConversationId(null);
+//     } catch (error) {
+//       console.error("Erreur lors de la suppression de la conversation : ", error);
+//       Alert.alert("Erreur lors de la suppression de la conversation", error.message);
+//     }
+//   };
 
-  const formatTimestamp = (timestamp) => {
-    const messageDate = timestamp.toDate();
-    const hours = messageDate.getHours().toString().padStart(2, '0');
-    const minutes = messageDate.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
+//   const formatTimestamp = (timestamp) => {
+//     const messageDate = timestamp.toDate();
+//     const hours = messageDate.getHours().toString().padStart(2, '0');
+//     const minutes = messageDate.getMinutes().toString().padStart(2, '0');
+//     return `${hours}:${minutes}`;
+//   };
 
-  const renderItem = ({ item }) => {
-    return (
-      <View style={item.senderId === user.email ? styles.sentMessage : styles.receivedMessage}>
-        <Text style={styles.messageText}>{item.text}</Text>
-        <Text style={styles.timestamp}>{item.timestamp ? formatTimestamp(item.timestamp) : ''}</Text>
-      </View>
-    );
-  };
+//   const renderItem = ({ item }) => {
+//     return (
+//       <View style={item.senderId === user.email ? styles.sentMessage : styles.receivedMessage}>
+//         <Text style={styles.messageText}>{item.text}</Text>
+//         <Text style={styles.timestamp}>{item.timestamp ? formatTimestamp(item.timestamp) : ''}</Text>
+//       </View>
+//     );
+//   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMessages((prevMessages) => [...prevMessages]);
-    }, 60000); // Update every minute
+//   useEffect(() => {
+//     const interval = setInterval(() => {
+//       setMessages((prevMessages) => [...prevMessages]);
+//     }, 60000); // Update every minute
 
-    return () => clearInterval(interval);
-  }, []);
+//     return () => clearInterval(interval);
+//   }, []);
+// =======
+//   const pickImage = async () => {
+//     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//     if (permissionResult.granted === false) {
+//       Alert.alert("Permission requise", "Vous devez autoriser l'accès à la galerie pour ajouter des photos.");
+//       return;
+//     }
+
+//     const pickerResult = await ImagePicker.launchImageLibraryAsync({
+//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//       allowsEditing: true,
+//       quality: 1,
+//     });
+
+//     if (pickerResult.canceled) {
+//       console.log("Image picking was cancelled.");
+//       return;
+//     }
+
+//     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+//       const selectedImage = pickerResult.assets[0].uri;
+//       console.log("Image URI:", selectedImage);
+//       setCurrentImage(selectedImage);
+//     } else {
+//       console.log("No image picked.");
+//     }
+//   };
+// >>>>>>> master
 
   return (
     <View style={[styles.container, s.paddingG]}>
       <View style={styles.view1}>
         <Text style={[s.textWhite, s.mediumTitle]}>Messages</Text>
-        <TouchableOpacity style={styles.button} onPress={createConversation}>
-          <AntDesign name="pluscircleo" size={20} color="#ffffff" />
-          <Text style={[s.textWhite, s.bold, {marginLeft: 5}]}>Ajouter des amis</Text>
+// <<<<<<< mathis
+//         <TouchableOpacity style={styles.button} onPress={createConversation}>
+//           <AntDesign name="pluscircleo" size={20} color="#ffffff" />
+//           <Text style={[s.textWhite, s.bold, {marginLeft: 5}]}>Ajouter des amis</Text>
+// =======
+//         <TouchableOpacity style={styles.button} onPress={navigateAddFriends}>
+//           <AntDesign name="pluscircleo" size={20} color="#ffffff" />
+//           <Text style={[s.textWhite, s.bold, {marginLeft: 5}]}>Ajouter des amis</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity style={styles.button} onPress={navigateFriendsList}>
+//           <Ionicons name="people" size={20} color="#ffffff" />
+//           <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Friend Requests</Text>
+// >>>>>>> master
         </TouchableOpacity>
       </View>
       <View style={styles.view2}>
@@ -177,6 +255,50 @@ export default function Messages() {
           )}
           keyExtractor={(item) => item.id}
         />
+        {selectedConversationId && (
+          <>
+            <FlatList
+              style={[styles.messagesList, s.paddingG]}
+              data={messages}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.messageContainer}>
+                  <View style={styles.avatarContainer}>
+                    <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.avatar} />
+                  </View>
+                  <View style={styles.messageContent}>
+                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                      <Text style={[s.textWhite, styles.username]}>{item.senderId}</Text>
+                      <Text style={[styles.timestamp]}>{calculateTimeSinceLastMessage(new Date(item.timestamp))}</Text>
+                    </View>
+                    {item.image && (
+                      <TouchableOpacity onPress={() => viewFullScreenImage(item.image)}>
+                        <Image source={{ uri: item.image }} style={styles.imageMessage} />
+                      </TouchableOpacity>
+                    )}
+                    <Text style={[s.textWhite, styles.text]}>{item.text}</Text>
+                  </View>
+                </View>
+              )}
+              inverted
+            />
+            <View style={styles.footer}>
+              <TextInput
+                style={styles.messageInput}
+                value={currentMessage}
+                onChangeText={setCurrentMessage}
+                placeholder="Type a message"
+                placeholderTextColor={colors.gray}
+              />
+              <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
+                <Ionicons name="image-outline" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
+                <Ionicons name="send-outline" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </View>
       {selectedConversationId && (
         <View style={styles.messagesContainer}>
@@ -265,96 +387,159 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 10,
   },
-  conversationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    backgroundColor: '#333',
-    marginVertical: 5,
-    borderRadius: 10,
-  },
-  conversation: {
-    flex: 1,
-  },
-  conversationText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  deleteButton: {
-    paddingHorizontal: 10,
-  },
-  messagesContainer: {
-    flex: 1,
-    padding: 10,
-  },
-  sentMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: colors.secondary,
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 5,
-  },
-  receivedMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 5,
-  },
-  messageText: {
-    color: '#000',
-  },
-  timestamp: {
-    fontSize: 10,
-    color: '#555',
-    textAlign: 'right',
-  },
-  inputMessageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-  },
-  messageInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#000',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalButton: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: colors.secondary,
-    borderRadius: 10,
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontSize: 16,
+// <<<<<<< mathis
+//   conversationItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     padding: 10,
+//     backgroundColor: '#333',
+//     marginVertical: 5,
+//     borderRadius: 10,
+//   },
+//   conversation: {
+//     flex: 1,
+//   },
+//   conversationText: {
+//     color: '#fff',
+//     fontSize: 16,
+//   },
+//   deleteButton: {
+//     paddingHorizontal: 10,
+//   },
+//   messagesContainer: {
+//     flex: 1,
+//     padding: 10,
+//   },
+//   sentMessage: {
+//     alignSelf: 'flex-end',
+//     backgroundColor: colors.secondary,
+//     borderRadius: 10,
+//     padding: 10,
+//     marginVertical: 5,
+//   },
+//   receivedMessage: {
+//     alignSelf: 'flex-start',
+//     backgroundColor: '#f0f0f0',
+//     borderRadius: 10,
+//     padding: 10,
+//     marginVertical: 5,
+//   },
+//   messageText: {
+//     color: '#000',
+//   },
+//   timestamp: {
+//     fontSize: 10,
+//     color: '#555',
+//     textAlign: 'right',
+//   },
+//   inputMessageContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     padding: 10,
+//     backgroundColor: '#f0f0f0',
+//     borderRadius: 20,
+//   },
+//   messageInput: {
+//     flex: 1,
+//     marginLeft: 10,
+//     fontSize: 16,
+//     color: '#000',
+//   },
+//   fab: {
+//     position: 'absolute',
+//     bottom: 20,
+//     right: 20,
+//     width: 60,
+//     height: 60,
+//     borderRadius: 30,
+//     backgroundColor: colors.secondary,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   modalContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//   },
+//   modalContent: {
+//     width: '80%',
+//     backgroundColor: '#fff',
+//     borderRadius: 10,
+//     padding: 20,
+//     alignItems: 'center',
+//   },
+//   modalButton: {
+//     marginTop: 10,
+//     padding: 10,
+//     backgroundColor: colors.secondary,
+//     borderRadius: 10,
+//   },
+//   modalButtonText: {
+//     color: '#fff',
+//     fontSize: 16,
+// =======
+//   messagesList: {
+//     flex: 1,
+//   },
+//   messageContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     borderRadius: 10,
+//     padding: 10,
+//   },
+//   avatarContainer: {
+//     width: 50,
+//     height: 50,
+//     marginRight: 16,
+//     alignSelf: 'flex-start',
+//   },
+//   avatar: {
+//     width: 45,
+//     height: 45,
+//     borderRadius: 9999,
+//   },
+//   messageContent: {
+//     flex: 1,
+//   },
+//   username: {
+//     fontWeight: 'bold',
+//     fontSize: 16,
+//   },
+//   text: {
+//     fontSize: 14,
+//     marginVertical: 4,
+//   },
+//   timestamp: {
+//     fontSize: 12,
+//     color: '#8E909C',
+//   },
+//   imageMessage: {
+//     width: 200,
+//     height: 200,
+//     borderRadius: 10,
+//     marginTop: 10,
+//   },
+//   footer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     padding: 10,
+//     backgroundColor: '#23272A',
+//     paddingBottom: 40,
+//   },
+//   messageInput: {
+//     flex: 1,
+//     borderWidth: 1,
+//     borderColor: 'gray',
+//     padding: 10,
+//     borderRadius: 25,
+//     marginRight: 10,
+//     color: 'white',
+//   },
+//   iconButton: {
+//     padding: 10,
+// >>>>>>> master
   },
 });
+

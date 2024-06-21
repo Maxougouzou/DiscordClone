@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import colors from '../../config/colors';
 import s from '../../config/styles';
@@ -8,6 +8,7 @@ import { db } from '../firebaseConfig';
 import { calculateTimeSinceLastMessage } from '../../assets/js/utils';
 import { Ionicons } from '@expo/vector-icons';
 import useSession from '../../hooks/useSession';
+import * as ImagePicker from 'expo-image-picker';
 
 const Conversation = () => {
   const { id } = useLocalSearchParams();
@@ -15,6 +16,9 @@ const Conversation = () => {
   const [loading, setLoading] = useState(true);
   const [otherParticipant, setOtherParticipant] = useState(null);
   const [currentMessage, setCurrentMessage] = useState('');
+  const [currentImage, setCurrentImage] = useState(null);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [fullScreenImage, setFullScreenImage] = useState(null);
   const user = useSession();
   const router = useRouter();
 
@@ -39,7 +43,7 @@ const Conversation = () => {
         querySnapshot.forEach((doc) => {
           loadedMessages.push(doc.data());
         });
-        setMessages(loadedMessages);
+        setMessages(loadedMessages.reverse());
         setLoading(false);
       });
 
@@ -48,21 +52,55 @@ const Conversation = () => {
   }, [id, user]);
 
   const sendMessage = async () => {
-    if (currentMessage && id) {
+    if ((currentMessage || currentImage) && id) {
       const messageData = {
         text: currentMessage,
         senderId: user.email,
         timestamp: new Date(),
+        image: currentImage || null,
       };
 
       try {
         await addDoc(collection(db, "conversations", id, "messages"), messageData);
         setCurrentMessage('');
+        setCurrentImage(null);
       } catch (error) {
         console.error("Erreur lors de l'envoi du message : ", error);
         Alert.alert("Erreur lors de l'envoi du message", error.message);
       }
     }
+  };
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission requise", "Vous devez autoriser l'accès à la galerie pour ajouter des photos.");
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (pickerResult.canceled) {
+      console.log("Image picking was cancelled.");
+      return;
+    }
+
+    if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+      const selectedImage = pickerResult.assets[0].uri;
+      console.log("Image URI:", selectedImage);
+      setCurrentImage(selectedImage);
+    } else {
+      console.log("No image picked.");
+    }
+  };
+
+  const viewFullScreenImage = (uri) => {
+    setFullScreenImage(uri);
+    setImageModalVisible(true);
   };
 
   if (!user) {
@@ -102,22 +140,31 @@ const Conversation = () => {
           </View>
         </View>
       </View>
-      <ScrollView style={[styles.view2, s.paddingG]}>
-        {messages.map((message, index) => (
-          <View key={index} style={styles.messageContainer}>
+      <FlatList
+        style={[styles.view2, s.paddingG]}
+        data={messages}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.messageContainer}>
             <View style={styles.avatarContainer}>
               <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.avatar} />
             </View>
             <View style={styles.messageContent}>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                <Text style={[s.textWhite, styles.username]}>{message.senderId}</Text>
-                <Text style={[styles.timestamp]}>{calculateTimeSinceLastMessage(new Date(message.timestamp))}</Text>
+                <Text style={[s.textWhite, styles.username]}>{item.senderId}</Text>
+                <Text style={[styles.timestamp]}>{calculateTimeSinceLastMessage(new Date(item.timestamp))}</Text>
               </View>
-              <Text style={[s.textWhite, styles.text]}>{message.text}</Text>
+              {item.image && (
+                <TouchableOpacity onPress={() => viewFullScreenImage(item.image)}>
+                  <Image source={{ uri: item.image }} style={styles.imageMessage} />
+                </TouchableOpacity>
+              )}
+              <Text style={[s.textWhite, styles.text]}>{item.text}</Text>
             </View>
           </View>
-        ))}
-      </ScrollView>
+        )}
+        inverted
+      />
       <View style={styles.footer}>
         <TextInput
           style={styles.messageInput}
@@ -126,10 +173,28 @@ const Conversation = () => {
           placeholder="Type a message"
           placeholderTextColor={colors.gray}
         />
+        <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
+          <Ionicons name="image-outline" size={24} color="white" />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
           <Ionicons name="send-outline" size={24} color="white" />
         </TouchableOpacity>
       </View>
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={imageModalVisible}
+        onRequestClose={() => {
+          setImageModalVisible(!imageModalVisible);
+        }}
+      >
+        <View style={styles.fullScreenImageContainer}>
+          <Image source={{ uri: fullScreenImage }} style={styles.fullScreenImage} />
+          <TouchableOpacity onPress={() => setImageModalVisible(false)} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>X</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -176,7 +241,6 @@ const styles = StyleSheet.create({
   messageContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
     borderRadius: 10,
     padding: 10,
   },
@@ -184,11 +248,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     marginRight: 16,
+    alignSelf: 'flex-start',
   },
   avatar: {
     width: 45,
     height: 45,
-    borderRadius: 99999,
+    borderRadius: 9999,
   },
   messageContent: {
     flex: 1,
@@ -212,6 +277,12 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: colors.primary,
   },
+  imageMessage: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginTop: 10,
+  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -230,6 +301,29 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 10,
+  },
+  fullScreenImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+    borderRadius: 20,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 18,
   },
 });
 
