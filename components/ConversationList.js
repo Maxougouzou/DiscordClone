@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import MessageCard from '../components/Messages/MessageCard';
-import { db } from '../app/firebaseConfig'; // Ensure this path is correct
+import { db } from '../app/firebaseConfig'; // Assurez-vous que ce chemin est correct
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 
 export default function ConversationsList({ conversations, user, setSelectedConversationId }) {
@@ -42,7 +42,7 @@ export default function ConversationsList({ conversations, user, setSelectedConv
             message={{
               senderId: item.participants.find(p => user != null && p !== user.email),
               text: lastMessage ? lastMessage.text : 'No messages yet',
-              timestamp: lastMessage ? lastMessage.timestamp : item.createdAt,
+              timestamp: lastMessage ? lastMessage.timestamp.toDate().toString() : item.createdAt.toDate().toString(),
               avatar: require('../assets/images/avatars/avatar1.png'),
             }}
             onPress={() => handlePress(item.id)}
