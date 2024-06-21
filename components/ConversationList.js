@@ -41,7 +41,7 @@ export default function ConversationsList({ conversations, user, setSelectedConv
           <MessageCard 
             message={{
               senderId: item.participants.find(p => user != null && p !== user.email),
-              text: lastMessage ? lastMessage.text : 'No messages yet',
+              text: lastMessage ? lastMessage.text : <i>Commencez à échanger</i>,
               timestamp: lastMessage ? lastMessage.timestamp : item.createdAt,
               avatar: require('../assets/images/avatars/avatar1.png'),
             }}

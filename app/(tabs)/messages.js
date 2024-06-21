@@ -198,7 +198,7 @@ export default function Messages() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={navigateFriendsList}>
             <Ionicons name="people" size={20} color="#ffffff" />
-            <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Friend Requests</Text>
+            <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Demande(s) d'ami</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.view2}>
@@ -272,19 +272,21 @@ export default function Messages() {
           visible={modalVisible}
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <TextInput
-                style={styles.input}
-                placeholder="Pseudo ou Email"
-                placeholderTextColor={colors.gray}
-                value={newConversationIdentifier}
-                onChangeText={setNewConversationIdentifier}
-              />
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <View style={styles.modalInputContainer}>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Pseudo ou Email"
+                  placeholderTextColor={colors.gray}
+                  value={newConversationIdentifier}
+                  onChangeText={setNewConversationIdentifier}
+                />
+              </View>
               <TouchableOpacity style={styles.modalButton} onPress={createConversation}>
                 <Text style={styles.modalButtonText}>Créer une conversation</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalButton} onPress={() => setModalVisible(false)}>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: colors.turquoise }]} onPress={() => setModalVisible(false)}>
                 <Text style={styles.modalButtonText}>Fermer</Text>
               </TouchableOpacity>
             </View>
@@ -373,19 +375,6 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'right',
   },
-  inputMessageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-  },
-  messageInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#000',
-  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -399,34 +388,53 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 10,
   },
-  modalContainer: {
+  centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
-    backgroundColor: '#fff',
+  modalView: {
+    backgroundColor: colors.primary,
+    borderRadius: 20,
     padding: 20,
-    borderRadius: 10,
     width: '80%',
     alignItems: 'center',
   },
-  modalButton: {
-    marginTop: 10,
-    backgroundColor: colors.primary,
-    padding: 10,
+  modalInputContainer: {
+    width: '100%',
+  },
+  modalInput: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderWidth: 0.2,
+    borderColor: colors.gray,
     borderRadius: 10,
+    fontSize: 16,
+    color: colors.gray,
+    width: '100%',
+  },
+  messageInput: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  modalButton: {
+    marginTop: 15,
+    backgroundColor: colors.blurple,
+    padding: 12,
+    borderRadius: 10,
+    width: '100%',
+    alignItems: 'center',
   },
   modalButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-  },
+  },  
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    backgroundColor: colors.primary,
+    right: 40,
+    bottom: 40,
+    backgroundColor: colors.blurple,
     width: 56,
     height: 56,
     borderRadius: 28,

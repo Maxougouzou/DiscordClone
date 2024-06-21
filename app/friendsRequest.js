@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, FlatList, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { collection, query, where, onSnapshot, updateDoc, doc, arrayUnion, deleteDoc, getDoc, setDoc } from "firebase/firestore";
 import { db } from './firebaseConfig';
 import useSession from '../hooks/useSession';
@@ -77,6 +78,7 @@ export default function FriendRequests() {
   const [sentRequestEmails, setSentRequestEmails] = useState([]);
   const user = useSession();
   const navigation = useNavigation();
+  const router = useRouter();
 
   useEffect(() => {
     if (user) {
@@ -146,12 +148,18 @@ export default function FriendRequests() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </TouchableOpacity>
-        <Text style={[s.textWhite, s.mediumTitle]}>Friend Requests</Text>
+        <Text style={[s.textWhite, s.mediumTitle]}>Demande(s) d'ami</Text>
       </View>
 
-      <Text style={[s.textWhite, s.mediumTitle, styles.categoryTitle]}>Received Requests</Text>
+      <Text style={[s.textWhite, s.mediumTitle, styles.categoryTitle]}>Demande(s) d'ami</Text>
       {receivedRequestEmails.length === 0 ? (
-        <Text style={[s.textWhite, styles.noRequestsText]}>No received friend requests pending</Text>
+        <Text style={[s.textWhite, styles.noRequestsText]}>
+        <i>C'est bien vide ici... Prends un
+        <TouchableOpacity onPress={() => router.push('/addFriends')}>
+          <Text style={{color: colors.blurple, fontWeight: 'bold'}}> curly </Text>
+        </TouchableOpacity>
+        !</i>
+      </Text>      
       ) : (
         <FlatList
           data={receivedRequestEmails} // Use emails for received requests
@@ -172,9 +180,9 @@ export default function FriendRequests() {
         />
       )}
 
-      <Text style={[s.textWhite, s.mediumTitle, styles.categoryTitle]}>Sent Requests</Text>
+      <Text style={[s.textWhite, s.mediumTitle, styles.categoryTitle]}>Demande(s) envoyée(s)</Text>
       {sentRequestEmails.length === 0 ? (
-        <Text style={[s.textWhite, styles.noRequestsText]}>No sent friend requests pending</Text>
+        <Text style={[s.textWhite, styles.noRequestsText]}><i>Pas de demande en attente(s)</i></Text>
       ) : (
         <FlatList
           data={sentRequestEmails} // Use emails for sent requests
@@ -210,7 +218,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   categoryTitle: {
-    marginTop: 20,
+    marginTop: 50,
     marginBottom: 10,
   },
   requestContainer: {
@@ -246,7 +254,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   noRequestsText: {
-    marginTop: 20,
+    marginTop: 10,
     fontSize: 18,
     textAlign: 'center',
   },

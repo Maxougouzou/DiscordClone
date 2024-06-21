@@ -143,19 +143,20 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   header: {
+    height: '15%',
     flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    paddingTop: 50,
+    alignItems: 'flex-end',
+    paddingBottom: 10,
     paddingHorizontal: 20,
-    marginBottom: 20,
   },
   backButton: {
     marginRight: 20,
   },
   container: {
+    height: '85%',
     flex: 1,
-    justifyContent: 'center',
+    marginTop: 75,
+    justifyContent: 'start',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
@@ -178,6 +179,7 @@ const styles = StyleSheet.create({
   },
   friendsTitle: {
     marginTop: 30,
+    marginTop: 100,
     marginBottom: 10,
   },
   noFriendsText: {
