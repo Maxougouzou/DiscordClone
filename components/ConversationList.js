@@ -1,9 +1,9 @@
 import React from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import MessageCard from '../components/Messages/MessageCard';
 
-export default function ConversationsList({ conversations, user, setSelectedConversationId }) {
+export default function ConversationsList({ conversations, user, setSelectedConversationId, deleteConversation }) {
   const router = useRouter();
 
   const handlePress = (id) => {
@@ -24,27 +24,9 @@ export default function ConversationsList({ conversations, user, setSelectedConv
             avatar: require('../assets/images/avatars/avatar1.png'),
           }}
           onPress={() => handlePress(item.id)}
+          onDelete={() => deleteConversation(item.id)}
         />
       )}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  conversationItem: {
-    padding: 10,
-    backgroundColor: '#f7f7f7',
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 5,
-    marginVertical: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-});

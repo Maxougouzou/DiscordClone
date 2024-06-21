@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, FlatList, Modal, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, FlatList, Modal, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, arrayUnion, doc, getDocs, deleteDoc } from "firebase/firestore";
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import useSession from '../../hooks/useSession';
@@ -115,16 +115,6 @@ export default function Messages() {
     }
   };
 
-  const deleteMessage = async (messageId) => {
-    try {
-      const messageRef = doc(db, "conversations", selectedConversationId, "messages", messageId);
-      await deleteDoc(messageRef);
-    } catch (error) {
-      console.error("Erreur lors de la suppression du message : ", error);
-      Alert.alert("Erreur lors de la suppression du message", error.message);
-    }
-  };
-
   const deleteConversation = async (conversationId) => {
     try {
       const conversationRef = doc(db, "conversations", conversationId);
@@ -146,32 +136,15 @@ export default function Messages() {
   };
 
   const renderItem = ({ item }) => {
-    if (user != null && item.senderId === user.email) {
-      return (
-        <View style={styles.sentMessage}>
-          <Text style={styles.messageText}>{item.text}</Text>
-          <Text style={styles.timestamp}>{item.timestamp ? formatTimestamp(item.timestamp) : ''}</Text>
-          {item.image && (
-            <Image source={{ uri: item.image }} style={styles.imageMessage} />
-          )}
-          {item.senderId === user.email && (
-            <TouchableOpacity onPress={() => deleteMessage(item.id)}>
-              <Ionicons name="trash-outline" size={20} color={colors.gray} />
-            </TouchableOpacity>
-          )}
-        </View>
-      );
-    } else {
-      return (
-        <View style={styles.receivedMessage}>
-          <Text style={styles.messageText}>{item.text}</Text>
-          <Text style={styles.timestamp}>{item.timestamp ? formatTimestamp(item.timestamp) : ''}</Text>
-          {item.image && (
-            <Image source={{ uri: item.image }} style={styles.imageMessage} />
-          )}
-        </View>
-      );
-    }
+    return (
+      <View style={item.senderId === user.email ? styles.sentMessage : styles.receivedMessage}>
+        <Text style={styles.messageText}>{item.text}</Text>
+        <Text style={styles.timestamp}>{item.timestamp ? formatTimestamp(item.timestamp) : ''}</Text>
+        {item.image && (
+          <Image source={{ uri: item.image }} style={styles.imageMessage} />
+        )}
+      </View>
+    );
   };
 
   useEffect(() => {
@@ -210,86 +183,111 @@ export default function Messages() {
   };
 
   return (
-    <View style={[styles.container, s.paddingG]}>
-      <View style={styles.view1}>
-        <Text style={[s.textWhite, s.mediumTitle]}>Messages</Text>
-        <TouchableOpacity style={styles.button} onPress={navigateAddFriends}>
-          <AntDesign name="pluscircleo" size={20} color="#ffffff" />
-          <Text style={[s.textWhite, s.bold, {marginLeft: 5}]}>Ajouter des amis</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={navigateFriendsList}>
-          <Ionicons name="people" size={20} color="#ffffff" />
-          <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Friend Requests</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.view2}>
-        <View style={[styles.inputContainer, s.bgDark]}>
-          <Ionicons name="search" size={20} color="#8E909C" />
-          <TextInput
-            style={styles.input}
-            placeholder="Recherche"
-            placeholderTextColor={colors.gray}
-            value={newConversationEmail}
-            onChangeText={setNewConversationEmail}
-          />
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.select({ ios: 80, android: 500 })}
+    >
+      <View style={[styles.container, s.paddingG]}>
+        <View style={styles.view1}>
+          <Text style={[s.textWhite, s.mediumTitle]}>Messages</Text>
+          <TouchableOpacity style={styles.button} onPress={navigateAddFriends}>
+            <AntDesign name="pluscircleo" size={20} color="#ffffff" />
+            <Text style={[s.textWhite, s.bold, {marginLeft: 5}]}>Ajouter des amis</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={navigateFriendsList}>
+            <Ionicons name="people" size={20} color="#ffffff" />
+            <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Friend Requests</Text>
+          </TouchableOpacity>
         </View>
-        <ConversationsList 
-          conversations={conversations}
-          user={user}
-          setSelectedConversationId={setSelectedConversationId}
-        />
-      </View>
-      {selectedConversationId && (
-        <>
-          <FlatList
-            style={[styles.messagesList, s.paddingG]}
-            data={messages}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderItem}
-            inverted
-          />
-          <View style={styles.footer}>
-            <TextInput
-              style={styles.messageInput}
-              value={currentMessage}
-              onChangeText={setCurrentMessage}
-              placeholder="Type a message"
-              placeholderTextColor={colors.gray}
-            />
-            <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
-              <Ionicons name="image-outline" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
-              <Ionicons name="send-outline" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
-        </>
-      )}
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
-        <AntDesign name="plus" size={24} color="#ffffff" />
-      </TouchableOpacity>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+        <View style={styles.view2}>
+          <View style={[styles.inputContainer, s.bgDark]}>
+            <Ionicons name="search" size={20} color="#8E909C" />
             <TextInput
               style={styles.input}
-              placeholder="Pseudo ou Email"
+              placeholder="Recherche"
               placeholderTextColor={colors.gray}
-              value={newConversationIdentifier}
-              onChangeText={setNewConversationIdentifier}
+              value={newConversationEmail}
+              onChangeText={setNewConversationEmail}
             />
-            <TouchableOpacity style={styles.modalButton} onPress={createConversation}>
-              <Text style={styles.modalButtonText}>Créer une conversation</Text>
-            </TouchableOpacity>
           </View>
+          <ConversationsList 
+            conversations={conversations} 
+            user={user} 
+            setSelectedConversationId={setSelectedConversationId} 
+            deleteConversation={deleteConversation} 
+          />
         </View>
-      </Modal>
-    </View>
+        {selectedConversationId && (
+          <>
+            <FlatList
+              style={[styles.messagesList, s.paddingG]}
+              data={messages}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.messageContainer}>
+                  <View style={styles.avatarContainer}>
+                    <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.avatar} />
+                  </View>
+                  <View style={styles.messageContent}>
+                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                      <Text style={[s.textWhite, styles.username]}>{item.senderId}</Text>
+                      <Text style={[styles.timestamp]}>{calculateTimeSinceLastMessage(new Date(item.timestamp))}</Text>
+                    </View>
+                    {item.image && (
+                      <TouchableOpacity onPress={() => viewFullScreenImage(item.image)}>
+                        <Image source={{ uri: item.image }} style={styles.imageMessage} />
+                      </TouchableOpacity>
+                    )}
+                    <Text style={[s.textWhite, styles.text]}>{item.text}</Text>
+                  </View>
+                </View>
+              )}
+              inverted
+            />
+            <View style={styles.footer}>
+              <TextInput
+                style={styles.messageInput}
+                value={currentMessage}
+                onChangeText={setCurrentMessage}
+                placeholder="Type a message"
+                placeholderTextColor={colors.gray}
+              />
+              <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
+                <Ionicons name="image-outline" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
+                <Ionicons name="send-outline" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+        <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
+          <AntDesign name="plus" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TextInput
+                style={styles.input}
+                placeholder="Pseudo ou Email"
+                placeholderTextColor={colors.gray}
+                value={newConversationIdentifier}
+                onChangeText={setNewConversationIdentifier}
+              />
+              <TouchableOpacity style={styles.modalButton} onPress={createConversation}>
+                <Text style={styles.modalButtonText}>Créer une conversation</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -393,8 +391,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     backgroundColor: '#23272A',
-    borderTopWidth: 1,
-    borderTopColor: colors.gray,
+    paddingBottom: 40,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
   },
   iconButton: {
     padding: 10,
@@ -440,3 +440,4 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 });
+
