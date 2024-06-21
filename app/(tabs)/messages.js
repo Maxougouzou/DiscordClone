@@ -192,14 +192,6 @@ export default function Messages() {
       <View style={[styles.container, s.paddingG]}>
         <View style={styles.view1}>
           <Text style={[s.textWhite, s.mediumTitle]}>Messages</Text>
-          <TouchableOpacity style={styles.button} onPress={navigateAddFriends}>
-            <AntDesign name="pluscircleo" size={20} color="#ffffff" />
-            <Text style={[s.textWhite, s.bold, {marginLeft: 5}]}>Ajouter des amis</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={navigateFriendsList}>
-            <Ionicons name="people" size={20} color="#ffffff" />
-            <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Demande(s) d'ami</Text>
-          </TouchableOpacity>
             <View style={{ flexDirection: 'row' }}>
               <TouchableOpacity style={[styles.button , {marginRight:5}]} onPress={navigateAddFriends}>
                 <AntDesign name="adduser" size={20} color="#ffffff" />
