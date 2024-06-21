@@ -80,14 +80,22 @@ export default function Messages() {
       }
 
       try {
+        const q = query(collection(db, "users"), where("email", "==", recipientEmail));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          Alert.alert('Erreur', 'Email non trouvé.');
+          return;
+        }
+
         const newConversationRef = await addDoc(collection(db, "conversations"), {
           participants: [user.email, recipientEmail],
-          createdAt: serverTimestamp(),
+          createdAt: new Date(),
           deletedBy: [],
+          lastMessageTimestamp: new Date()
         });
         setNewConversationIdentifier('');
-        setSelectedConversationId(newConversationRef.id);
-        setModalVisible(false); 
+        setModalVisible(false); // Masquer le modal après la création de la conversation
       } catch (error) {
         console.error("Erreur lors de la création de la conversation : ", error);
         Alert.alert("Erreur lors de la création de la conversation", error.message);
@@ -100,7 +108,7 @@ export default function Messages() {
       const messageData = {
         text: newMessage,
         senderId: user.email,
-        timestamp: serverTimestamp(),
+        timestamp: new Date(),
         image: currentImage || null,
       };
 
@@ -108,6 +116,10 @@ export default function Messages() {
         await addDoc(collection(db, "conversations", selectedConversationId, "messages"), messageData);
         setNewMessage('');
         setCurrentImage(null);
+
+        await updateDoc(doc(db, "conversations", selectedConversationId), {
+          lastMessageTimestamp: new Date()
+        });
       } catch (error) {
         console.error("Erreur lors de l'envoi du message : ", error);
         Alert.alert("Erreur lors de l'envoi du message", error.message);
@@ -133,18 +145,6 @@ export default function Messages() {
     const hours = messageDate.getHours().toString().padStart(2, '0');
     const minutes = messageDate.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
-  };
-
-  const renderItem = ({ item }) => {
-    return (
-      <View style={item.senderId === user.email ? styles.sentMessage : styles.receivedMessage}>
-        <Text style={styles.messageText}>{item.text}</Text>
-        <Text style={styles.timestamp}>{item.timestamp ? formatTimestamp(item.timestamp) : ''}</Text>
-        {item.image && (
-          <Image source={{ uri: item.image }} style={styles.imageMessage} />
-        )}
-      </View>
-    );
   };
 
   useEffect(() => {
@@ -221,7 +221,7 @@ export default function Messages() {
             deleteConversation={deleteConversation} 
           />
         </View>
-        {selectedConversationId && (
+        {selectedConversationId && messages.length > 0 && ( // Ajout de la condition pour vérifier si des messages existent
           <>
             <FlatList
               style={[styles.messagesList, s.paddingG]}
@@ -283,6 +283,7 @@ export default function Messages() {
                   placeholderTextColor={colors.gray}
                   value={newConversationIdentifier}
                   onChangeText={setNewConversationIdentifier}
+                  autoCapitalize='none'
                 />
               </View>
               <TouchableOpacity style={styles.modalButton} onPress={createConversation}>
@@ -450,4 +451,3 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 });
-

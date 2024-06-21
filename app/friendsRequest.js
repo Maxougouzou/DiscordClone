@@ -100,7 +100,7 @@ export default function FriendRequests() {
           requestsData.push({ id: doc.id, ...doc.data() });
         });
         setReceivedRequests(requestsData);
-        fetchEmails(requestsData, setReceivedRequestEmails, "requesterUid"); // Fetch emails for received requests
+        fetchEmails(requestsData, setReceivedRequestEmails, "requesterUid"); 
       });
 
       const unsubscribeSent = onSnapshot(sentQuery, (querySnapshot) => {
@@ -109,7 +109,7 @@ export default function FriendRequests() {
           requestsData.push({ id: doc.id, ...doc.data() });
         });
         setSentRequests(requestsData);
-        fetchEmails(requestsData, setSentRequestEmails, "recipientUid"); // Fetch emails for sent requests
+        fetchEmails(requestsData, setSentRequestEmails, "recipientUid"); 
       });
 
       return () => {
@@ -150,19 +150,18 @@ export default function FriendRequests() {
         </TouchableOpacity>
         <Text style={[s.textWhite, s.mediumTitle]}>Demande(s) d'ami</Text>
       </View>
-
       <Text style={[s.textWhite, s.mediumTitle, styles.categoryTitle]}>Demande(s) d'ami</Text>
       {receivedRequestEmails.length === 0 ? (
         <Text style={[s.textWhite, styles.noRequestsText]}>
-        <i>C'est bien vide ici... Prends un
-        <TouchableOpacity onPress={() => router.push('/addFriends')}>
-          <Text style={{color: colors.blurple, fontWeight: 'bold'}}> curly </Text>
-        </TouchableOpacity>
-        !</i>
-      </Text>      
+          C'est bien vide ici... Prends un
+          <TouchableOpacity onPress={() => router.push('/addFriends')}>
+            <Text style={[{color: colors.blurple, fontSize: 18}]}> curly </Text>
+          </TouchableOpacity>
+          !
+        </Text>      
       ) : (
         <FlatList
-          data={receivedRequestEmails} // Use emails for received requests
+          data={receivedRequestEmails} 
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
             <View style={styles.requestContainer}>
@@ -182,10 +181,10 @@ export default function FriendRequests() {
 
       <Text style={[s.textWhite, s.mediumTitle, styles.categoryTitle]}>Demande(s) envoyée(s)</Text>
       {sentRequestEmails.length === 0 ? (
-        <Text style={[s.textWhite, styles.noRequestsText]}><i>Pas de demande en attente(s)</i></Text>
+        <Text style={[s.textWhite, styles.noRequestsText]}>Pas de demande en attente(s)</Text>
       ) : (
         <FlatList
-          data={sentRequestEmails} // Use emails for sent requests
+          data={sentRequestEmails}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
             <View style={styles.requestContainer}>
@@ -254,8 +253,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   noRequestsText: {
-    marginTop: 10,
     fontSize: 18,
     textAlign: 'center',
+    justifyContent: 'flex-end',
   },
 });

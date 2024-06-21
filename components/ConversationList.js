@@ -31,18 +31,31 @@ export default function ConversationsList({ conversations, user, setSelectedConv
     router.push(`/messages/${id}`);
   };
 
+  const getLastTimestamp = (conversation) => {
+    const lastMessage = lastMessages[conversation.id];
+    return lastMessage ? lastMessage.timestamp.toDate() : conversation.createdAt.toDate();
+  };
+
+  const sortedConversations = conversations.sort((a, b) => getLastTimestamp(b) - getLastTimestamp(a));
+
   return (
     <FlatList
-      data={conversations}
+      data={sortedConversations}
       keyExtractor={item => item.id}
       renderItem={({ item }) => {
         const lastMessage = lastMessages[item.id];
+        const senderId = lastMessage ? lastMessage.senderId : null;
+        const messageText = lastMessage 
+        ? lastMessage.image 
+          ? `${senderId} a envoyé une image` 
+          : lastMessage.text 
+        : 'Commencez à échanger';
+      
         return (
           <MessageCard 
             message={{
               senderId: item.participants.find(p => user != null && p !== user.email),
-              text: lastMessage ? lastMessage.text : <i>Commencez à échanger</i>,
-              text: lastMessage ? lastMessage.text : 'No messages yet',
+              text: messageText,
               timestamp: lastMessage ? lastMessage.timestamp.toDate().toString() : item.createdAt.toDate().toString(),
               avatar: require('../assets/images/avatars/avatar1.png'),
             }}
