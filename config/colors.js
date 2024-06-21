@@ -12,7 +12,8 @@ const colors = {
     white: '#FFFFFF',   
     green: '#57F287',   
     red: '#ED4245',  
-    gray: '#8E909C'  
+    gray: '#8E909C',
+    turquoise:'#00695c'  
 };
 
 export default colors;
