@@ -55,7 +55,7 @@ export default function Profile() {
     try {
       await signOut(auth);
       console.log("Déconnexion réussie");
-      router.replace('/log-in'); 
+      router.replace('/sign-in');
     } catch (error) {
       console.error("Erreur de déconnexion : ", error);
     }
@@ -136,15 +136,19 @@ export default function Profile() {
           <Text style={styles.buttonText}>Sauvegarder la photo</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Card>
+        <Card>
             {user &&<Text style={[s.textWhite, s.largeTitle, s.bold]}>{user.pseudo}</Text>}
             {user && <Text style={[s.textWhite, s.bodyText]}>{user.email}</Text>}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
               <View style={[s.buttonGray, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
                 <Ionicons name="chatbubble-outline" size={16} color="#FFF" style={{ marginRight: 5 }} />
                 <Text style={[s.textWhite, s.bold]}>Ajouter un status</Text>
-              </TouchableOpacity>
-            )}
+              </View>
+              <View style={[s.buttonGray, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
+                <Ionicons name="create-outline" size={16} color="#FFF" style={{ marginRight: 5 }} />
+                <Text style={[s.textWhite, s.bold]}>Modifier le profil</Text>
+              </View>
+            </View>
           </Card>
           <Card>
             <Text style={s.textGray}>Membre discord depuis :</Text>
