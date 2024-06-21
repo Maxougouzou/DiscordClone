@@ -1,90 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { getDocs, query, where, collection } from 'firebase/firestore';
-import { auth, db } from './firebaseConfig';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { db } from './firebaseConfig';
 import colors from '../config/colors';
 
+const auth = getAuth();
 
 export default function SignIn() {
-  const [identifier, setIdentifier] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pseudo, setPseudo] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.replace('/messages');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogin = async () => {
-    setLoading(true);
-    let email = identifier;
-
-    if (!identifier.includes('@')) {
-      try {
-        const q = query(collection(db, 'users'), where('pseudo', '==', identifier));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          email = querySnapshot.docs[0].data().email;
-        } else {
-          setLoading(false);
-          Alert.alert('Erreur de connexion', 'Pseudo non trouvé.');
-          return;
-        }
-      } catch (error) {
-        setLoading(false);
-        Alert.alert('Erreur de connexion', 'Erreur lors de la vérification du pseudo.');
-        console.error('Erreur lors de la vérification du pseudo : ', error);
-        return;
-      }
-    }
-
-    if (!validateEmail(email)) {
-      setLoading(false);
-      Alert.alert('Erreur de connexion', 'Email invalide.');
+  const handleSignIn = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas.');
       return;
     }
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        setLoading(false);
-        console.log('Utilisateur connecté : ', userCredential.user);
-        router.replace('/messages');
-      })
-      .catch((error) => {
-        setLoading(false);
-        console.error('Erreur de connexion : ', error);
-        Alert.alert('Erreur de connexion', error.message);
+    try {
+      // Vérifier l'unicité du pseudo
+      const q = query(collection(db, 'users'), where('pseudo', '==', pseudo));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        Alert.alert('Erreur', 'Ce pseudo est déjà utilisé.');
+        return;
+      }
+
+      // Créer un nouvel utilisateur avec Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const currentDate = new Date();
+
+      // Ajouter des informations supplémentaires dans Firestore
+      await addDoc(collection(db, 'users'), {
+        uid: user.uid,
+        email: user.email,
+        pseudo: pseudo,
+        createdAt: currentDate,
       });
+
+      console.log('Compte créé avec succès : ', user);
+      router.replace('/messages');
+    } catch (error) {
+      console.error('Erreur lors de la création du compte : ', error);
+      Alert.alert('Erreur lors de la création du compte', error.message);
+    }
   };
 
-  const validateEmail = (email) => {
-    const re = /\S+@\S+\.\S+/;
-    return re.test(email);
-  };
-
-  const navigateToSignUp = () => {
-    router.push('/sign-up');
+  const navigateToLogIn = () => {
+    router.push('/log-in');
   };
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
       <View style={styles.inner}>
-        <Text style={styles.title}>Se connecter</Text>
+        <Text style={styles.title}>S'inscrire</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email ou Pseudo"
+          placeholder="Pseudo"
           placeholderTextColor="#888"
-          value={identifier}
-          onChangeText={setIdentifier}
+          value={pseudo}
+          onChangeText={setPseudo}
           autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#888"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
         <TextInput
           style={styles.input}
@@ -94,17 +84,21 @@ export default function SignIn() {
           onChangeText={setPassword}
           secureTextEntry={true}
         />
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Connexion</Text>
-          )}
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmer le mot de passe"
+          placeholderTextColor="#888"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry={true}
+        />
+        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+          <Text style={styles.buttonText}>S'inscrire</Text>
         </TouchableOpacity>
-        <View style={styles.signUpTextContainer}>
-          <Text style={styles.signUpText}>Vous n'avez pas de compte ? </Text>
-          <TouchableOpacity onPress={navigateToSignUp}>
-            <Text style={styles.signUpLink}>Inscrivez-vous</Text>
+        <View style={styles.logInTextContainer}>
+          <Text style={styles.logInText}>Vous avez déjà un compte ? </Text>
+          <TouchableOpacity onPress={navigateToLogIn}>
+            <Text style={styles.logInLink}>Se connecter</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -144,7 +138,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#23272A',
   },
   button: {
-    backgroundColor: colors.blurple,
+    backgroundColor: colors.turquoise,
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -155,17 +149,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
   },
-  signUpTextContainer: {
+  logInTextContainer: {
     flexDirection: 'row',
     marginTop: 10,
     alignItems: 'center',
   },
-  signUpText: {
+  logInText: {
     color: '#fff',
     fontSize: 16,
   },
-  signUpLink: {
-    color: colors.turquoise,
+  logInLink: {
+    color: colors.blurple,
     fontSize: 16,
     fontWeight: 'bold',
   },
