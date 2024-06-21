@@ -100,58 +100,64 @@ export default function AddFriends({ navigation }) {
   };
 
   return (
-    <View style={[styles.container, s.paddingG]}>
+    <View style={styles.outerContainer}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push("/messages")} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </TouchableOpacity>
-        <Text style={[s.textWhite, s.mediumTitle]}>Add a Friend</Text>
+        <Text style={[s.textWhite, s.mediumTitle]}>Ajouter un ami</Text>
       </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter friend's email"
-        placeholderTextColor={colors.gray}
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TouchableOpacity style={styles.button} onPress={addFriend}>
-        <Text style={[s.textWhite, s.bold]}>Add Friend</Text>
-      </TouchableOpacity>
-      <Text style={[s.textWhite, s.mediumTitle, styles.friendsTitle]}>Your Friends</Text>
-      {friendEmails.length === 0 ? ( 
-        <Text style={[s.textWhite, styles.noFriendsText]}>You have no friends yet.</Text>
-      ) : (
-        <FlatList
-          data={friendEmails} 
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.friendContainer}>
-              <Text style={s.textWhite}>{item}</Text>
-            </View>
-          )}
+      <View style={[styles.container, s.paddingG]}>
+        <TextInput
+          style={styles.input}
+          placeholder="Entrer l'email de l'ami à ajouter"
+          placeholderTextColor={colors.gray}
+          value={email}
+          onChangeText={setEmail}
         />
-      )}
+        <TouchableOpacity style={styles.button} onPress={addFriend}>
+          <Text style={[s.textWhite, s.bold]}>Ajouter</Text>
+        </TouchableOpacity>
+        <Text style={[s.textWhite, s.mediumTitle, styles.friendsTitle]}>Vos amis</Text>
+        {friendEmails.length === 0 ? ( 
+          <Text style={[s.textWhite, styles.noFriendsText]}>Vous n'avez aucun ami pour l'instant.</Text>
+        ) : (
+          <FlatList
+            data={friendEmails} 
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.friendContainer}>
+                <Text style={s.textWhite}>{item}</Text>
+              </View>
+            )}
+          />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
     backgroundColor: colors.primary,
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
+    paddingTop: 50,
+    paddingHorizontal: 20,
     marginBottom: 20,
-    marginTop: 50,
   },
   backButton: {
     marginRight: 20,
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   input: {
     width: '100%',
@@ -164,7 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#23272A',
   },
   button: {
-    backgroundColor: '#7289DA',
+    backgroundColor: colors.blurple,
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',

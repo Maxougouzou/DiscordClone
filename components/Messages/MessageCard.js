@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import s from '../../config/styles';
 import { calculateTimeSinceLastMessage } from '../../assets/js/utils';
 
-const MessageCard = ({ message, onPress }) => {
+const MessageCard = ({ message, onPress, onDelete }) => {
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.container}>
@@ -11,14 +12,18 @@ const MessageCard = ({ message, onPress }) => {
           <Image source={message.avatar} style={styles.avatar} />
         </View>
         <View style={[styles.contentContainer]}>
-          <View style={styles.usernameContainer}>
+          <View style={[styles.usernameContainer, { justifyContent: 'space-between' }]}>
             <Text style={[styles.username, s.textGray]}>{message.senderId}</Text>
             <Text style={[styles.time]}>{calculateTimeSinceLastMessage(new Date(message.timestamp))}</Text>
           </View>
+          <View style={styles.usernameContainer}>
           <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.content]}>
             {message.text}
           </Text>
-          {message.image && <Image source={{ uri: message.image }} style={styles.image} />}
+          <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+          <Ionicons name="trash-outline" size={20} color="#8E909C" />
+        </TouchableOpacity>
+        </View>
         </View>
       </View>
     </TouchableOpacity>
