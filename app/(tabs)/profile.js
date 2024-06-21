@@ -30,7 +30,7 @@ export default function Profile() {
         <Image source={require('../../assets/images/icon.png')} style={styles.image} />
         <View style={{ flex: 1 }}>
           <Card>
-            <Text style={[s.textWhite, s.largeTitle, s.bold]}>{user.pseudo}</Text>
+            {user &&<Text style={[s.textWhite, s.largeTitle, s.bold]}>{user.pseudo}</Text>}
             {user && <Text style={[s.textWhite, s.bodyText]}>{user.email}</Text>}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
               <View style={[s.buttonGray, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
