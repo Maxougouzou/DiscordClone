@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import {  signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import s from '../config/styles';
-
+import { useRouter } from 'expo-router';
 import { auth } from './firebaseConfig';
 
 export default function SignIn() {

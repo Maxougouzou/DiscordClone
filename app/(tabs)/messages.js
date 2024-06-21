@@ -8,6 +8,7 @@ import { db } from '../firebaseConfig';
 import s from '../../config/styles';
 import colors from '../../config/colors';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { calculateTimeSinceLastMessage } from '../../assets/js/utils';
 
 export default function Messages() {
@@ -17,6 +18,8 @@ export default function Messages() {
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [currentMessage, setCurrentMessage] = useState('');
   const [currentImage, setCurrentImage] = useState(null);
+  const router = useRouter();
+
 
   const user = useSession();
 
@@ -48,6 +51,15 @@ export default function Messages() {
       return unsubscribe;
     }
   }, [selectedConversationId]);
+
+  const navigateAddFriends = () => {
+    router.push('/addFriends');
+  };
+
+  const navigateFriendsList = () => {
+    router.push('/friendsRequest');
+  };
+
 
   const createConversation = async () => {
     if (newConversationEmail) {
@@ -116,9 +128,13 @@ export default function Messages() {
     <View style={[styles.container, s.paddingG]}>
       <View style={styles.view1}>
         <Text style={[s.textWhite, s.mediumTitle]}>Messages</Text>
-        <TouchableOpacity style={styles.button} onPress={createConversation}>
+        <TouchableOpacity style={styles.button} onPress={navigateAddFriends}>
           <AntDesign name="pluscircleo" size={20} color="#ffffff" />
           <Text style={[s.textWhite, s.bold, {marginLeft: 5}]}>Ajouter des amis</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={navigateFriendsList}>
+          <Ionicons name="people" size={20} color="#ffffff" />
+          <Text style={[s.textWhite, s.bold, { marginLeft: 5 }]}>Friend Requests</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.view2}>
