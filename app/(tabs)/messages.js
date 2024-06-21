@@ -154,6 +154,7 @@ export default function Messages() {
 
     return () => clearInterval(interval);
   }, []);
+  
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -225,7 +226,7 @@ export default function Messages() {
               data={messages}
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
-                <View style={styles.messageContainer}>
+                <View>
                   <View style={styles.avatarContainer}>
                     <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.avatar} />
                   </View>
@@ -282,6 +283,9 @@ export default function Messages() {
               />
               <TouchableOpacity style={styles.modalButton} onPress={createConversation}>
                 <Text style={styles.modalButtonText}>Créer une conversation</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalButtonText}>Fermer</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -346,10 +350,6 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     paddingHorizontal: 10,
-  },
-  messagesContainer: {
-    flex: 1,
-    padding: 10,
   },
   sentMessage: {
     alignSelf: 'flex-end',

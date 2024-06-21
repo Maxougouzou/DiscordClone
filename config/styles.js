@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     fontSize: 26,
-  },
+    },
   mediumTitle: {
     fontSize: 24,
     lineHeight: 28,
