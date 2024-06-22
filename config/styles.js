@@ -90,6 +90,10 @@ const styles = StyleSheet.create({
   },
   paddingG: {
     paddingHorizontal: 15,
+  },
+  borderBottom:{
+    borderBottomWidth: 0.2,
+    borderColor: '#8E909C',
   }
 });
 

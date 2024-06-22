@@ -52,16 +52,6 @@ export default function Profile() {
     fetchUserProfile();
   }, [user]);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      console.log("Déconnexion réussie");
-      router.replace('/sign-in');
-    } catch (error) {
-      console.error("Erreur de déconnexion : ", error);
-    }
-  };
-
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -165,9 +155,6 @@ export default function Profile() {
               keyExtractor={(item) => item.id}
             />
           </Card>
-          <TouchableOpacity style={styles.button} onPress={handleSignOut}>
-            <Text style={styles.buttonText}>Déconnexion</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
