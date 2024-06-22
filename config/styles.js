@@ -76,6 +76,14 @@ const styles = StyleSheet.create({
     borderWidth: 0.2,
     borderColor: 'rgba(255, 255, 255, 0.20)',
   },
+  buttonBlurple:{
+    backgroundColor: colors.blurple,
+    padding: 10,
+    borderRadius: 9999,
+    alignItems: 'center',
+    borderWidth: 0.2,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
+  },
   textGray: {
     color: "#8E909C",
     fontWeight: 'bold',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, FlatList, Modal } from 'react-native';
 import { signOut, getAuth } from "firebase/auth";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
@@ -20,6 +20,7 @@ export default function Profile() {
   const [editingStatus, setEditingStatus] = useState(false);
   const [friends, setFriends] = useState([]);
   const [image, setImage] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -80,6 +81,10 @@ export default function Profile() {
     }
   };
 
+  const navigateToSettings = () => {
+    router.push('/settings');
+  };
+
   const uploadImage = async () => {
     if (!image || !user) return;
 
@@ -102,7 +107,6 @@ export default function Profile() {
       console.log('Image téléchargée avec succès:', photoURL);
       Alert.alert('Succès', 'Votre photo de profil a été mise à jour.');
 
-      // Mettre à jour l'état de l'image avec la nouvelle URL de la photo
       setImage({ uri: photoURL });
     } catch (error) {
       console.error("Erreur lors de l'upload de l'image : ", error);
@@ -126,25 +130,24 @@ export default function Profile() {
   );
 
   return (
+    
     <View style={styles.container}>
       <View style={[styles.view1, s.bgBlue]}></View>
       <View style={[styles.view2, s.bgPrimary, s.padding]}>
-        <TouchableOpacity onPress={pickImage}>
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Image source={image ? { uri: image.uri } : require('../../assets/images/icon.png')} style={styles.image} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.saveButton} onPress={uploadImage}>
-          <Text style={styles.buttonText}>Sauvegarder la photo</Text>
-        </TouchableOpacity>
+        
         <View style={{ flex: 1 }}>
-        <Card>
-            {user &&<Text style={[s.textWhite, s.largeTitle, s.bold]}>{user.pseudo}</Text>}
+          <Card>
+            {user && <Text style={[s.textWhite, s.largeTitle, s.bold]}>{user.pseudo}</Text>}
             {user && <Text style={[s.textWhite, s.bodyText]}>{user.email}</Text>}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
-              <View style={[s.buttonGray, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
+              <View style={[s.buttonBlurple, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
                 <Ionicons name="chatbubble-outline" size={16} color="#FFF" style={{ marginRight: 5 }} />
                 <Text style={[s.textWhite, s.bold]}>Ajouter un status</Text>
               </View>
-              <View style={[s.buttonGray, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
+              <View style={[s.buttonBlurple, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
                 <Ionicons name="create-outline" size={16} color="#FFF" style={{ marginRight: 5 }} />
                 <Text style={[s.textWhite, s.bold]}>Modifier le profil</Text>
               </View>
@@ -167,6 +170,35 @@ export default function Profile() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <TouchableOpacity onPress={pickImage}>
+              <Image source={image ? { uri: image.uri } : require('../../assets/images/avatars/avatar1.png')} style={styles.modalImage} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalButtonSave} onPress={uploadImage}>
+              <Text style={styles.buttonText}>Sauvegarder la photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalButtonClose} onPress={() => setModalVisible(!modalVisible)}>
+              <Text style={styles.buttonText}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <View style={{width: 35, height: 35, borderRadius: 9999, backgroundColor: colors.primary, position: 'absolute', top: 50, right: 20, justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity onPress={navigateToSettings}>
+            <Ionicons name="settings-outline" size={22} color="#FFF"/>
+          </TouchableOpacity>
+        </View>
     </View>
   );
 }
@@ -188,12 +220,6 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     borderWidth: 4,
     borderColor: colors.primary,
-  },
-  saveButton: {
-    backgroundColor: colors.blurple,
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
   },
   button: {
     backgroundColor: 'red',
@@ -223,5 +249,50 @@ const styles = StyleSheet.create({
   },
   friendName: {
     color: '#fff',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 99999,
+    borderWidth: 4,
+    marginTop: -80,
+    borderColor: colors.primary,
+  },
+  modalButtonSave: {
+    backgroundColor: colors.blurple,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 20,
+    width: 200,
+  },
+  modalButtonClose: {
+    backgroundColor: colors.turquoise,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 20,
+    width: 200,
   },
 });

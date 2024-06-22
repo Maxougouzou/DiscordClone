@@ -365,6 +365,6 @@ export default function StartPage() {
     return <Redirect href="/messages" />;
   }
 
-  return <Redirect href="/sign-in" />;
+  return <Redirect href="/log-in" />;
 }
 
