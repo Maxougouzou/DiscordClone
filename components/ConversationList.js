@@ -3,10 +3,11 @@ import { FlatList, StyleSheet, Text, View, Image, TouchableOpacity } from 'react
 import { useRouter } from 'expo-router';
 import MessageCard from '../components/Messages/MessageCard';
 import { db } from '../app/firebaseConfig';
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs, doc, getDoc } from "firebase/firestore";
 
 export default function ConversationsList({ conversations, user, setSelectedConversationId, deleteConversation, userPseudos }) {
   const [lastMessages, setLastMessages] = useState({});
+  const [userProfiles, setUserProfiles] = useState({});
   const router = useRouter();
 
   useEffect(() => {
@@ -24,6 +25,26 @@ export default function ConversationsList({ conversations, user, setSelectedConv
     };
     
     fetchLastMessages();
+  }, [conversations]);
+
+  useEffect(() => {
+    const fetchUserProfiles = async () => {
+      const profiles = { ...userProfiles };
+      for (const conversation of conversations) {
+        for (const participant of conversation.participants) {
+          if (!profiles[participant]) {
+            const userDocRef = doc(db, 'users', participant);
+            const docSnapshot = await getDoc(userDocRef);
+            if (docSnapshot.exists()) {
+              profiles[participant] = docSnapshot.data();
+            }
+          }
+        }
+      }
+      setUserProfiles(profiles);
+    };
+
+    fetchUserProfiles();
   }, [conversations]);
 
   const handlePress = (id) => {
@@ -46,11 +67,14 @@ export default function ConversationsList({ conversations, user, setSelectedConv
         const lastMessage = lastMessages[item.id];
         const senderId = lastMessage ? lastMessage.senderId : null;
         const messageText = lastMessage 
-        ? lastMessage.image 
-          ? `${senderId} a envoyé une image` 
-          : lastMessage.text 
-        : 'Commencez à échanger';
+          ? lastMessage.image 
+            ? `${senderId} a envoyé une image` 
+            : lastMessage.text 
+          : 'Commencez à échanger';
         const senderPseudoOrEmail = senderId ? (userPseudos[senderId] || senderId) : null;
+        const avatar = senderId && userProfiles[senderId]?.photoURL 
+          ? { uri: userProfiles[senderId].photoURL } 
+          : require('../assets/images/avatars/avatar1.png');
 
         return (
           <MessageCard 
@@ -58,7 +82,7 @@ export default function ConversationsList({ conversations, user, setSelectedConv
               senderId: item.participants.find(p => user != null && p !== user.email),
               text: messageText,
               timestamp: lastMessage ? lastMessage.timestamp.toDate().toString() : item.createdAt.toDate().toString(),
-              avatar: require('../assets/images/avatars/avatar1.png'),
+              avatar: avatar,
               senderPseudo: senderPseudoOrEmail,
             }}
             onPress={() => handlePress(item.id)}

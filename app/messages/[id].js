@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Modal, Alert, Platform } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Modal, Alert, Platform, KeyboardAvoidingView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import colors from '../../config/colors';
 import s from '../../config/styles';
@@ -9,6 +9,7 @@ import { calculateTimeSinceLastMessage } from '../../assets/js/utils';
 import { Ionicons } from '@expo/vector-icons';
 import useSession from '../../hooks/useSession';
 import * as ImagePicker from 'expo-image-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Conversation = () => {
   const { id } = useLocalSearchParams();
@@ -19,6 +20,7 @@ const Conversation = () => {
   const [currentImage, setCurrentImage] = useState(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState(null);
+  const [featureModalVisible, setFeatureModalVisible] = useState(false);
   const user = useSession();
   const router = useRouter();
 
@@ -112,87 +114,110 @@ const Conversation = () => {
   }
 
   return (
-    <View 
-      style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.select({ ios: 80, android: 500 })}
-    >
-      <View style={[styles.container]}>
-        <View style={[styles.view1, s.paddingG]}>
-          <View style={styles.viewTop}>
-            <TouchableOpacity onPress={() => router.replace('/messages')} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
-            <View style={styles.headerContent}>
-              <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.image} />
-              {otherParticipant && <Text style={[s.textWhite, s.mediumTitle, { marginLeft: 5 }]}>{otherParticipant}</Text>}
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.select({ ios: 0, android: 500 })}
+      >
+        <View style={{ flex: 1, backgroundColor: colors.primary }}>
+          <View style={[styles.view1, s.paddingG]}>
+            <View style={styles.viewTop}>
+              <TouchableOpacity onPress={() => router.replace('/messages')} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+              </TouchableOpacity>
+              <View style={styles.headerContent}>
+                <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.image} />
+                {otherParticipant && <Text style={[s.textWhite, s.mediumTitle, { marginLeft: 5 }]}>{otherParticipant}</Text>}
+              </View>
             </View>
           </View>
-        </View>
-        {messages.length > 0 ? (
-          <FlatList
-            style={[styles.view2, s.paddingG]}
-            data={messages}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.messageContainer}>
-                <View style={styles.avatarContainer}>
-                  <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.avatar} />
-                </View>
-                <View style={styles.messageContent}>
-                  <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                    <Text style={[s.textWhite, styles.username]}>{item.senderId}</Text>
-                    <Text style={[styles.timestamp]}>{calculateTimeSinceLastMessage(new Date(item.timestamp))}</Text>
+          {messages.length > 0 ? (
+            <FlatList
+              style={[styles.view2, s.paddingG]}
+              data={messages}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.messageContainer}>
+                  <View style={styles.avatarContainer}>
+                    <Image source={require('../../assets/images/avatars/avatar1.png')} style={styles.avatar} />
                   </View>
-                  {item.image && (
-                    <TouchableOpacity onPress={() => viewFullScreenImage(item.image)}>
-                      <Image source={{ uri: item.image }} style={styles.imageMessage} />
-                    </TouchableOpacity>
-                  )}
-                  <Text style={[s.textWhite, styles.text]}>{item.text}</Text>
+                  <View style={styles.messageContent}>
+                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                      <Text style={[s.textWhite, styles.username]}>{item.senderId}</Text>
+                      <Text style={[styles.timestamp]}>{calculateTimeSinceLastMessage(new Date(item.timestamp))}</Text>
+                    </View>
+                    {item.image && (
+                      <TouchableOpacity onPress={() => viewFullScreenImage(item.image)}>
+                        <Image source={{ uri: item.image }} style={styles.imageMessage} />
+                      </TouchableOpacity>
+                    )}
+                    <Text style={[s.textWhite, styles.text]}>{item.text}</Text>
+                  </View>
                 </View>
-              </View>
-            )}
-            inverted
-          />
-        ) : (
-          <View style={[styles.container, styles.noMessages]}>
-            <Text style={[s.textWhite, s.mediumTitle, {marginBottom:5}]}>C'est un peu vide ici !</Text>
-            <Text style={[s.textGray, s.bodyText]}>Envoie ton premier message a {otherParticipant}</Text>
-          </View>
-        )}
-        <View style={styles.footer}>
-          <TextInput
-            style={styles.messageInput}
-            value={currentMessage}
-            onChangeText={setCurrentMessage}
-            placeholder="Type a message"
-            placeholderTextColor={colors.gray}
-          />
-          <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
-            <Ionicons name="image-outline" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
-            <Ionicons name="send-outline" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-        <Modal
-          animationType="slide"
-          transparent={false}
-          visible={imageModalVisible}
-          onRequestClose={() => {
-            setImageModalVisible(!imageModalVisible);
-          }}
-        >
-          <View style={styles.fullScreenImageContainer}>
-            <Image source={{ uri: fullScreenImage }} style={styles.fullScreenImage} />
-            <TouchableOpacity onPress={() => setImageModalVisible(false)} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>X</Text>
+              )}
+              inverted
+            />
+          ) : (
+            <View style={[styles.container, styles.noMessages]}>
+              <Text style={[s.textWhite, s.mediumTitle, {marginBottom:5}]}>C'est un peu vide ici !</Text>
+              <Text style={[s.textGray, s.bodyText]}>Envoie ton premier message à {otherParticipant}</Text>
+            </View>
+          )}
+          <View style={styles.footer}>
+            <TextInput
+              style={styles.messageInput}
+              value={currentMessage}
+              onChangeText={setCurrentMessage}
+              placeholder="Type a message"
+              placeholderTextColor={colors.gray}
+            />
+            <TouchableOpacity style={styles.iconButton} onPress={() => setFeatureModalVisible(true)}>
+              <Ionicons name="add-outline" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={sendMessage}>
+              <Ionicons name="send-outline" size={24} color="white" />
             </TouchableOpacity>
           </View>
-        </Modal>
-      </View>
-    </View>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={featureModalVisible}
+            onRequestClose={() => {
+              setFeatureModalVisible(!featureModalVisible);
+            }}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <TouchableOpacity style={styles.modalButton} onPress={pickImage}>
+                  <Ionicons name="image-outline" size={24} color="black" />
+                  <Text>Send Image</Text>
+                </TouchableOpacity>
+                {/* Add other buttons for more features here */}
+                <TouchableOpacity style={styles.closeModalButton} onPress={() => setFeatureModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="black" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+          <Modal
+            animationType="slide"
+            transparent={false}
+            visible={imageModalVisible}
+            onRequestClose={() => {
+              setImageModalVisible(!imageModalVisible);
+            }}
+          >
+            <View style={styles.fullScreenImageContainer}>
+              <Image source={{ uri: fullScreenImage }} style={styles.fullScreenImage} />
+              <TouchableOpacity onPress={() => setImageModalVisible(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>X</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -287,6 +312,8 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingBottom: 20,
     backgroundColor: '#23272A',
+    borderTopWidth: 1,
+    borderTopColor: '#121212',
   },
   messageInput: {
     flex: 1,
@@ -296,9 +323,34 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginRight: 10,
     color: 'white',
+    backgroundColor: '#2f3136',
   },
   iconButton: {
     padding: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+    width: '100%',
+  },
+  closeModalButton: {
+    marginTop: 10,
   },
   fullScreenImageContainer: {
     flex: 1,

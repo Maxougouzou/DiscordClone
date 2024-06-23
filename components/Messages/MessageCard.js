@@ -17,13 +17,13 @@ const MessageCard = ({ message, onPress, onDelete }) => {
             <Text style={[styles.time]}>{calculateTimeSinceLastMessage(new Date(message.timestamp))}</Text>
           </View>
           <View style={styles.usernameContainer}>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.content]}>
-            {message.text}
-          </Text>
-          <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-            <Ionicons name="trash-outline" size={20} color="#8E909C" />
-          </TouchableOpacity>
-        </View>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.content]}>
+              {message.text}
+            </Text>
+            <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+              <Ionicons name="trash-outline" size={20} color="#8E909C" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
