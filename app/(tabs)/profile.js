@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, FlatList, Modal } from 'react-native';
-import { signOut, getAuth } from "firebase/auth";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, FlatList, Modal } from 'react-native';
+import { getAuth } from "firebase/auth";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { collection, doc, getDocs, updateDoc, setDoc, getDoc, query, where } from 'firebase/firestore';
@@ -17,7 +17,6 @@ export default function Profile() {
   const auth = getAuth();
   const router = useRouter();
   const [status, setStatus] = useState('');
-  const [editingStatus, setEditingStatus] = useState(false);
   const [friends, setFriends] = useState([]);
   const [image, setImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -68,6 +67,7 @@ export default function Profile() {
     if (!pickerResult.canceled) {
       const { uri } = pickerResult.assets[0];
       setImage({ uri });
+      setModalVisible(true);
     }
   };
 
@@ -98,18 +98,10 @@ export default function Profile() {
       Alert.alert('Succès', 'Votre photo de profil a été mise à jour.');
 
       setImage({ uri: photoURL });
+      setModalVisible(false);
     } catch (error) {
       console.error("Erreur lors de l'upload de l'image : ", error);
       Alert.alert('Erreur', "Erreur lors de l'upload de l'image");
-    }
-  };
-
-  const handleSaveStatus = async () => {
-    if (user) {
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, { status });
-      setEditingStatus(false);
-      Alert.alert('Succès', 'Votre statut a été mis à jour.');
     }
   };
 
@@ -120,11 +112,10 @@ export default function Profile() {
   );
 
   return (
-    
     <View style={styles.container}>
       <View style={[styles.view1, s.bgBlue]}></View>
       <View style={[styles.view2, s.bgPrimary, s.padding]}>
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <TouchableOpacity onPress={pickImage}>
           <Image source={image ? { uri: image.uri } : require('../../assets/images/icon.png')} style={styles.image} />
         </TouchableOpacity>
         
@@ -133,14 +124,14 @@ export default function Profile() {
             {user && <Text style={[s.textWhite, s.largeTitle, s.bold]}>{user.pseudo}</Text>}
             {user && <Text style={[s.textWhite, s.bodyText]}>{user.email}</Text>}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
-              <View style={[s.buttonBlurple, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
+              <TouchableOpacity onPress={() => setModalVisible(true)} style={[s.buttonBlurple, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
                 <Ionicons name="chatbubble-outline" size={16} color="#FFF" style={{ marginRight: 5 }} />
                 <Text style={[s.textWhite, s.bold]}>Ajouter un status</Text>
-              </View>
-              <View style={[s.buttonBlurple, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={pickImage} style={[s.buttonBlurple, { flex: 0.48, flexDirection: 'row', alignItems: 'center' }]}>
                 <Ionicons name="create-outline" size={16} color="#FFF" style={{ marginRight: 5 }} />
                 <Text style={[s.textWhite, s.bold]}>Modifier le profil</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </Card>
           <Card>
@@ -168,9 +159,7 @@ export default function Profile() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
-            <TouchableOpacity onPress={pickImage}>
-              <Image source={image ? { uri: image.uri } : require('../../assets/images/avatars/avatar1.png')} style={styles.modalImage} />
-            </TouchableOpacity>
+            <Image source={image ? { uri: image.uri } : require('../../assets/images/avatars/avatar1.png')} style={styles.modalImage} />
             <TouchableOpacity style={styles.modalButtonSave} onPress={uploadImage}>
               <Text style={styles.buttonText}>Sauvegarder la photo</Text>
             </TouchableOpacity>
@@ -181,11 +170,11 @@ export default function Profile() {
         </View>
       </Modal>
 
-      <View style={{width: 35, height: 35, borderRadius: 9999, backgroundColor: colors.primary, position: 'absolute', top: 50, right: 20, justifyContent: 'center', alignItems: 'center' }}>
-          <TouchableOpacity onPress={navigateToSettings}>
-            <Ionicons name="settings-outline" size={22} color="#FFF"/>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.settingsIcon}>
+        <TouchableOpacity onPress={navigateToSettings}>
+          <Ionicons name="settings-outline" size={22} color="#FFF"/>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -208,26 +197,9 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: colors.primary,
   },
-  button: {
-    backgroundColor: 'red',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
-  },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-  },
-  input: {
-    borderBottomColor: colors.gray,
-    borderBottomWidth: 1,
-    marginVertical: 10,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
   },
   friendItem: {
     padding: 10,
@@ -281,5 +253,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     width: 200,
+  },
+  settingsIcon: {
+    width: 35,
+    height: 35,
+    borderRadius: 9999,
+    backgroundColor: colors.primary,
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
