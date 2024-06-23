@@ -1,11 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
-import s from '../config/styles';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import colors from '../config/colors';
-
+import { useRouter } from 'expo-router';
+import s from '../config/styles';
 
 const NotificationCard = () => {
+    const router = useRouter();
+
+    const navigateToAddFriends = () => {
+        router.push('/friendsRequest');
+    };
+
     return (
         <View style={styles.notificationCard}>
             <View style={styles.iconContainer}>
@@ -15,9 +21,12 @@ const NotificationCard = () => {
                 <Text style={[s.textWhite, s.bodyText, s.bold]}>
                     Joueur1, Joueur2 et X autres t'ont envoyé des demandes d'amis.
                 </Text>
-                <View style={[s.buttonGray , {marginTop:15, marginRight:40}]}>
+                <TouchableOpacity 
+                    style={[s.buttonGray, { marginTop: 15, marginRight: 40 }]} 
+                    onPress={navigateToAddFriends}
+                >
                     <Text style={[s.textWhite, s.bold]}>Voir les demandes d'amis</Text>
-                </View>
+                </TouchableOpacity>
             </View>
             <Text style={styles.time}>3j</Text>
         </View>
@@ -27,17 +36,12 @@ const NotificationCard = () => {
 const styles = StyleSheet.create({
     notificationCard: {
         flexDirection: 'row',
-        alignItems: 'start',
+        alignItems: 'flex-start',
         padding: 15,
         borderRadius: 5,
         marginVertical: 10,
         borderBottomWidth: 0.2,
         borderColor: '#8E909C',
-    },
-    image: {
-        width: 50,
-        height: 50,
-        borderRadius: 9999,
     },
     iconContainer: {
         width: 50,
@@ -53,10 +57,6 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 25,
         marginRight: 25,
-    },
-    title: {
-        fontSize: 16,
-        marginBottom: 10,
     },
     time: {
         textAlign: 'right',

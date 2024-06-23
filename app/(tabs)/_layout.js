@@ -2,13 +2,21 @@ import { Tabs } from 'expo-router';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { StyleSheet } from 'react-native';
 
 export default function TabsLayout() {
   const colorScheme = useColorScheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'dark'].tint,
+        tabBarActiveTintColor: '#5865F2',
+        tabBarInactiveTintColor: '#8E909C',
+        tabBarStyle: {
+          ...styles.tabBar,
+          backgroundColor: '#1C1D26',
+          borderTopWidth: 0,
+        },
         headerShown: false,
       }}
     >
@@ -18,15 +26,6 @@ export default function TabsLayout() {
           title: 'Messages',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'chatbubble' : 'chatbubble-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="servers"
-        options={{
-          title: 'Servers',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'server' : 'server-outline'} color={color} />
           ),
         }}
       />
@@ -51,3 +50,12 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    borderTopWidth: 0,
+    height: 100,
+    paddingBottom: 30,
+    paddingTop: 25,
+  },
+});
