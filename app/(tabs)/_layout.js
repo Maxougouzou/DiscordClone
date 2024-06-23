@@ -30,15 +30,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="servers"
-        options={{
-          title: 'Servers',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'server' : 'server-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="notifications"
         options={{
           title: 'Notifications',
@@ -63,8 +54,8 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     borderTopWidth: 0,
-    height: 60,
-    paddingBottom: 10,
-    paddingTop: 10,
+    height: 100,
+    paddingBottom: 30,
+    paddingTop: 25,
   },
 });
