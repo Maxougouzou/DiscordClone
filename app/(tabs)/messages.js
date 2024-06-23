@@ -9,6 +9,7 @@ import s from '../../config/styles';
 import colors from '../../config/colors';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Messages() {
   const [newConversationIdentifier, setNewConversationIdentifier] = useState('');
@@ -155,7 +156,6 @@ export default function Messages() {
     }
   };
 
-
   useEffect(() => {
     const interval = setInterval(() => {
       setMessages((prevMessages) => [...prevMessages]);
@@ -163,7 +163,6 @@ export default function Messages() {
 
     return () => clearInterval(interval);
   }, []);
-  
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -193,16 +192,17 @@ export default function Messages() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.select({ ios: 30, android: 500 })}
-    >
-      <View style={[styles.container, s.paddingG]}>
-        <View style={styles.view1}>
-          <Text style={[s.textWhite, s.mediumTitle]}>Messages</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.select({ ios: 30, android: 500 })}
+      >
+        <View style={[styles.container, s.paddingG]}>
+          <View style={styles.view1}>
+            <Text style={[s.textWhite, s.mediumTitle]}>Messages</Text>
             <View style={{ flexDirection: 'row' }}>
-              <TouchableOpacity style={[styles.button , {marginRight:5}]} onPress={navigateAddFriends}>
+              <TouchableOpacity style={[styles.button, { marginRight: 5 }]} onPress={navigateAddFriends}>
                 <AntDesign name="adduser" size={20} color="#ffffff" />
                 <Text style={[s.textWhite, s.bold]}></Text>
               </TouchableOpacity>
@@ -211,67 +211,67 @@ export default function Messages() {
                 <Text style={[s.textWhite, s.bold]}></Text>
               </TouchableOpacity>
             </View>
-        </View>
-        <View style={styles.view2}>
-          <View style={[styles.inputContainer, s.bgDark]}>
-            <Ionicons name="search" size={20} color="#8E909C" />
-            <TextInput
-              style={styles.input}
-              placeholder="Recherche"
-              placeholderTextColor={colors.gray}
-              value={newConversationEmail}
-              onChangeText={setNewConversationEmail}
+          </View>
+          <View style={styles.view2}>
+            <View style={[styles.inputContainer, s.bgDark]}>
+              <Ionicons name="search" size={20} color="#8E909C" />
+              <TextInput
+                style={styles.input}
+                placeholder="Recherche"
+                placeholderTextColor={colors.gray}
+                value={newConversationEmail}
+                onChangeText={setNewConversationEmail}
+              />
+            </View>
+            <ConversationsList 
+              conversations={conversations} 
+              user={user} 
+              setSelectedConversationId={setSelectedConversationId} 
+              deleteConversation={deleteConversation}
+              userPseudos={userPseudos}
             />
           </View>
-          <ConversationsList 
-            conversations={conversations} 
-            user={user} 
-            setSelectedConversationId={setSelectedConversationId} 
-            deleteConversation={deleteConversation}
-            userPseudos={userPseudos}
-          />
-        </View>
-        <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
-          <AntDesign name="plus" size={24} color="#ffffff" />
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
+            <AntDesign name="plus" size={24} color="#ffffff" />
+          </TouchableOpacity>
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <View style={styles.modalInputContainer}>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Pseudo ou Email"
-                  placeholderTextColor={colors.gray}
-                  value={newConversationIdentifier}
-                  onChangeText={setNewConversationIdentifier}
-                  autoCapitalize='none'
-                />
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <View style={styles.modalInputContainer}>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="Pseudo ou Email"
+                    placeholderTextColor={colors.gray}
+                    value={newConversationIdentifier}
+                    onChangeText={setNewConversationIdentifier}
+                    autoCapitalize='none'
+                  />
+                </View>
+                <TouchableOpacity style={styles.modalButton} onPress={createConversation}>
+                  <Text style={styles.modalButtonText}>Créer une conversation</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalButton, { backgroundColor: colors.turquoise }]} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.modalButtonText}>Fermer</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.modalButton} onPress={createConversation}>
-                <Text style={styles.modalButtonText}>Créer une conversation</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, { backgroundColor: colors.turquoise }]} onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalButtonText}>Fermer</Text>
-              </TouchableOpacity>
             </View>
-          </View>
-        </Modal>
-
-      </View>
-    </KeyboardAvoidingView>
+          </Modal>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: colors.primary,
-    height: '100%',
   },
   input: {
     marginLeft: 10,
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   view2: {
-    height: '85%',
+    flex: 1,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
     backgroundColor: colors.primary,

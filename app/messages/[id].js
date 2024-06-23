@@ -4,12 +4,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import colors from '../../config/colors';
 import s from '../../config/styles';
 import { collection, query, onSnapshot, orderBy, doc, getDoc, addDoc } from "firebase/firestore";
-import { db } from '../firebaseConfig';
+import { db, storage } from '../firebaseConfig';
 import { calculateTimeSinceLastMessage } from '../../assets/js/utils';
 import { Ionicons } from '@expo/vector-icons';
 import useSession from '../../hooks/useSession';
 import * as ImagePicker from 'expo-image-picker';
+import { Audio } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import GiphySearch from './GiphySearch';
 
 const Conversation = () => {
   const { id } = useLocalSearchParams();
@@ -18,9 +21,12 @@ const Conversation = () => {
   const [otherParticipant, setOtherParticipant] = useState(null);
   const [currentMessage, setCurrentMessage] = useState('');
   const [currentImage, setCurrentImage] = useState(null);
+  const [currentAudio, setCurrentAudio] = useState(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
+  const [giphyModalVisible, setGiphyModalVisible] = useState(false);
+  const [recording, setRecording] = useState(null);
   const user = useSession();
   const router = useRouter();
 
@@ -32,7 +38,7 @@ const Conversation = () => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const otherParticipantEmail = data.participants.find(participant => participant !== user.email);
+          const otherParticipantEmail = data.participants && data.participants.find(participant => participant !== user.email);
           setOtherParticipant(otherParticipantEmail);
         }
       };
@@ -53,19 +59,42 @@ const Conversation = () => {
     }
   }, [id, user]);
 
+  const uploadFileAsync = async (uri, path) => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, blob);
+
+    const downloadURL = await getDownloadURL(fileRef);
+    return downloadURL;
+  };
+
   const sendMessage = async () => {
-    if ((currentMessage || currentImage) && id) {
+    if ((currentMessage || currentImage || currentAudio) && id) {
+      let imageUrl = null;
+      if (currentImage) {
+        imageUrl = await uploadFileAsync(currentImage, `images/${new Date().toISOString()}`);
+      }
+
+      let audioUrl = null;
+      if (currentAudio) {
+        audioUrl = await uploadFileAsync(currentAudio, `audios/${new Date().toISOString()}`);
+      }
+
       const messageData = {
         text: currentMessage,
         senderId: user.email,
         timestamp: new Date(),
-        image: currentImage || null,
+        image: imageUrl,
+        audio: audioUrl,
       };
 
       try {
         await addDoc(collection(db, "conversations", id, "messages"), messageData);
         setCurrentMessage('');
         setCurrentImage(null);
+        setCurrentAudio(null);
       } catch (error) {
         console.error("Erreur lors de l'envoi du message : ", error);
         Alert.alert("Erreur lors de l'envoi du message", error.message);
@@ -100,16 +129,50 @@ const Conversation = () => {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      console.log('Requesting permissions..');
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      }); 
+      console.log('Starting recording..');
+      const { recording } = await Audio.Recording.createAsync(
+         Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
+      );
+      setRecording(recording);
+      console.log('Recording started');
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  };
+
+  const stopRecording = async () => {
+    console.log('Stopping recording..');
+    setRecording(undefined);
+    await recording.stopAndUnloadAsync();
+    const uri = recording.getURI(); 
+    console.log('Recording stopped and stored at', uri);
+    setCurrentAudio(uri);
+  };
+
   const viewFullScreenImage = (uri) => {
     setFullScreenImage(uri);
     setImageModalVisible(true);
   };
 
+  const selectGif = (gif) => {
+    console.log('GIF selected:', gif);
+    setCurrentImage(gif.images.original.url);
+    setGiphyModalVisible(false);
+  };
+
   if (!user || loading) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <SafeAreaView style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#fff" />
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -117,7 +180,7 @@ const Conversation = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.select({ ios: 0, android: 500 })}
       >
         <View style={{ flex: 1, backgroundColor: colors.primary }}>
@@ -152,6 +215,11 @@ const Conversation = () => {
                         <Image source={{ uri: item.image }} style={styles.imageMessage} />
                       </TouchableOpacity>
                     )}
+                    {item.audio && (
+                      <TouchableOpacity onPress={() => Audio.Sound.createAsync({ uri: item.audio }, { shouldPlay: true })}>
+                        <Ionicons name="play-circle-outline" size={24} color="#fff" />
+                      </TouchableOpacity>
+                    )}
                     <Text style={[s.textWhite, styles.text]}>{item.text}</Text>
                   </View>
                 </View>
@@ -165,6 +233,15 @@ const Conversation = () => {
             </View>
           )}
           <View style={styles.footer}>
+            {currentImage && (
+              <Image source={{ uri: currentImage }} style={styles.imagePreview} />
+            )}
+            {currentAudio && (
+              <View style={styles.audioPreview}>
+                <Ionicons name="musical-notes" size={24} color="#fff" />
+                <Text style={styles.audioText}>Audio ready to send</Text>
+              </View>
+            )}
             <TextInput
               style={styles.messageInput}
               value={currentMessage}
@@ -193,11 +270,43 @@ const Conversation = () => {
                   <Ionicons name="image-outline" size={24} color="black" />
                   <Text>Send Image</Text>
                 </TouchableOpacity>
-                {/* Add other buttons for more features here */}
+                <TouchableOpacity style={styles.modalButton} onPress={() => setGiphyModalVisible(true)}>
+                  <Ionicons name="happy-outline" size={24} color="black" />
+                  <Text>Send GIF</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalButton} onPress={startRecording}>
+                  <Ionicons name="mic-outline" size={24} color="black" />
+                  <Text>Record Audio</Text>
+                </TouchableOpacity>
+                {recording && (
+                  <TouchableOpacity style={styles.modalButton} onPress={stopRecording}>
+                    <Ionicons name="stop-outline" size={24} color="black" />
+                    <Text>Stop Recording</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.closeModalButton} onPress={() => setFeatureModalVisible(false)}>
                   <Ionicons name="close" size={24} color="black" />
                 </TouchableOpacity>
               </View>
+            </View>
+          </Modal>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={giphyModalVisible}
+            onRequestClose={() => {
+              setGiphyModalVisible(!giphyModalVisible);
+            }}
+          >
+            <View style={styles.modalContainer}>
+              <GiphySearch 
+                apiKey="sEWmkjHZbLJfQApzqhWPOZvWSJpV1kCB"
+                onGifSelected={selectGif}
+                style={styles.giphySearch}
+              />
+              <TouchableOpacity style={styles.closeModalButton} onPress={() => setGiphyModalVisible(false)}>
+                <Ionicons name="close" size={24} color="black" />
+              </TouchableOpacity>
             </View>
           </Modal>
           <Modal
@@ -325,6 +434,21 @@ const styles = StyleSheet.create({
     color: 'white',
     backgroundColor: '#2f3136',
   },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+  audioPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  audioText: {
+    color: 'white',
+    marginLeft: 5,
+  },
   iconButton: {
     padding: 10,
   },
@@ -374,6 +498,10 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: 'white',
     fontSize: 18,
+  },
+  giphySearch: {
+    width: '100%',
+    height: '80%',
   },
 });
 
