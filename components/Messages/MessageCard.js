@@ -13,7 +13,7 @@ const MessageCard = ({ message, onPress, onDelete }) => {
         </View>
         <View style={[styles.contentContainer]}>
           <View style={[styles.usernameContainer, { justifyContent: 'space-between' }]}>
-            <Text style={[styles.username, s.textGray]}>{message.senderId}</Text>
+            <Text style={[styles.username, s.textGray]}>{message.senderPseudo || message.senderId}</Text>
             <Text style={[styles.time]}>{calculateTimeSinceLastMessage(new Date(message.timestamp))}</Text>
           </View>
           <View style={styles.usernameContainer}>
@@ -21,8 +21,8 @@ const MessageCard = ({ message, onPress, onDelete }) => {
             {message.text}
           </Text>
           <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-          <Ionicons name="trash-outline" size={20} color="#8E909C" />
-        </TouchableOpacity>
+            <Ionicons name="trash-outline" size={20} color="#8E909C" />
+          </TouchableOpacity>
         </View>
         </View>
       </View>
@@ -58,7 +58,8 @@ const styles = StyleSheet.create({
   username: {
     fontWeight: 'bold',
     marginBottom: 5,
-    fontSize: 16,
+    fontSize: 19,
+    color: '#8E909C'
   },
   content: {
     fontSize: 14,

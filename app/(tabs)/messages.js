@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, FlatList, Modal, Image, KeyboardAvoidingView, Platform } from 'react-native';
-import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, arrayUnion, doc, getDocs, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, arrayUnion, doc, getDocs } from "firebase/firestore";
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import useSession from '../../hooks/useSession';
 import ConversationsList from '../../components/ConversationList';
@@ -15,6 +15,7 @@ export default function Messages() {
   const [newConversationEmail, setNewConversationEmail] = useState('');
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
+  const [userPseudos, setUserPseudos] = useState({});
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -25,14 +26,20 @@ export default function Messages() {
   useEffect(() => {
     if (user) {
       const q = query(collection(db, "conversations"), where("participants", "array-contains", user.email));
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const unsubscribe = onSnapshot(q, async (querySnapshot) => {
         const loadedConversations = [];
+        const participants = new Set();
+
         querySnapshot.forEach((doc) => {
           const conversation = { id: doc.id, ...doc.data() };
           if (!conversation.deletedBy || !conversation.deletedBy.includes(user.email)) {
             loadedConversations.push(conversation);
+            conversation.participants.forEach(email => participants.add(email));
           }
         });
+
+        const pseudos = await fetchUserPseudos(Array.from(participants));
+        setUserPseudos(pseudos);
         setConversations(loadedConversations);
       });
       return unsubscribe;
@@ -53,6 +60,16 @@ export default function Messages() {
       return unsubscribe;
     }
   }, [selectedConversationId]);
+
+  const fetchUserPseudos = async (emails) => {
+    const pseudos = {};
+    const q = query(collection(db, "users"), where("email", "in", emails));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      pseudos[doc.data().email] = doc.data().pseudo;
+    });
+    return pseudos;
+  };
 
   const navigateAddFriends = () => {
     router.push('/addFriends');
@@ -179,7 +196,7 @@ export default function Messages() {
     <KeyboardAvoidingView 
       style={{ flex: 1 }} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.select({ ios: 80, android: 500 })}
+      keyboardVerticalOffset={Platform.select({ ios: 30, android: 500 })}
     >
       <View style={[styles.container, s.paddingG]}>
         <View style={styles.view1}>
@@ -210,7 +227,8 @@ export default function Messages() {
             conversations={conversations} 
             user={user} 
             setSelectedConversationId={setSelectedConversationId} 
-            deleteConversation={deleteConversation} 
+            deleteConversation={deleteConversation}
+            userPseudos={userPseudos}
           />
         </View>
         <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>

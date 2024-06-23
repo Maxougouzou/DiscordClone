@@ -5,7 +5,7 @@ import MessageCard from '../components/Messages/MessageCard';
 import { db } from '../app/firebaseConfig';
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 
-export default function ConversationsList({ conversations, user, setSelectedConversationId, deleteConversation }) {
+export default function ConversationsList({ conversations, user, setSelectedConversationId, deleteConversation, userPseudos }) {
   const [lastMessages, setLastMessages] = useState({});
   const router = useRouter();
 
@@ -50,7 +50,8 @@ export default function ConversationsList({ conversations, user, setSelectedConv
           ? `${senderId} a envoyé une image` 
           : lastMessage.text 
         : 'Commencez à échanger';
-      
+        const senderPseudoOrEmail = senderId ? (userPseudos[senderId] || senderId) : null;
+
         return (
           <MessageCard 
             message={{
@@ -58,6 +59,7 @@ export default function ConversationsList({ conversations, user, setSelectedConv
               text: messageText,
               timestamp: lastMessage ? lastMessage.timestamp.toDate().toString() : item.createdAt.toDate().toString(),
               avatar: require('../assets/images/avatars/avatar1.png'),
+              senderPseudo: senderPseudoOrEmail,
             }}
             onPress={() => handlePress(item.id)}
             onDelete={() => deleteConversation(item.id)}
